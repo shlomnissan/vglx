@@ -16,7 +16,7 @@
 
 namespace vglx {
 
-class Vector2;
+struct Vector2;
 auto constexpr Dot(const Vector2& a, const Vector2& b) -> float;
 
 /**
@@ -28,8 +28,7 @@ auto constexpr Dot(const Vector2& a, const Vector2& b) -> float;
  *
  * @ingroup MathGroup
  */
-class VGLX_EXPORT Vector2 {
-public:
+struct VGLX_EXPORT Vector2 {
     /// @brief X component.
     float x;
 
@@ -203,7 +202,7 @@ public:
  * @param b Second vector.
  */
 [[nodiscard]] constexpr auto operator+(const Vector2& a, const Vector2& b) -> Vector2 {
-    return Vector2 {a.x + b.x, a.y + b.y};
+    return {a.x + b.x, a.y + b.y};
 }
 
 /**
@@ -214,7 +213,7 @@ public:
  * @param b Second vector.
  */
 [[nodiscard]] constexpr auto operator-(const Vector2& a, const Vector2& b) -> Vector2 {
-    return Vector2 {a.x - b.x, a.y - b.y};
+    return {a.x - b.x, a.y - b.y};
 }
 
 /**
@@ -225,7 +224,7 @@ public:
  * @param n Scalar value.
  */
 [[nodiscard]] constexpr auto operator*(const Vector2& v, float n) -> Vector2 {
-    return Vector2 {v.x * n, v.y * n};
+    return {v.x * n, v.y * n};
 }
 
 /**
@@ -247,7 +246,7 @@ public:
  * @param b Second vector.
  */
 [[nodiscard]] constexpr auto operator*(const Vector2& a, const Vector2& b) -> Vector2 {
-    return Vector2 {a.x * b.x, a.y * b.y};
+    return {a.x * b.x, a.y * b.y};
 }
 
 /**
@@ -259,14 +258,14 @@ public:
  */
 [[nodiscard]] constexpr auto operator/(const Vector2& v, float n) -> Vector2 {
     n = 1.0f / n;
-    return Vector2 {v.x * n, v.y * n};
+    return {v.x * n, v.y * n};
 }
 
 /**
  * @brief Computes the dot product of two 2D vectors.
  * @related Vector2
  *
- * Computes the scalar product $a_x b_x + a_y b_y$, which measures how
+ * Computes the scalar product ($a_x b_x + a_y b_y$), which measures how
  * aligned two vectors are.
  *
  * @param a First vector.

@@ -16,34 +16,40 @@
 
 namespace vglx {
 
-class Vector3;
+struct Vector3;
 auto constexpr Dot(const Vector3& a, const Vector3& b) -> float;
 
 /**
- * @brief A 3D vector class for mathematical operations.
+ * @brief Represents a 3D vector with floating-point components.
+ *
+ * Vector3 stores an `(x, y, z)` triple and is used for positions, directions,
+ * normals, and general 3D math. It provides basic arithmetic, normalization,
+ * and utility helpers.
  *
  * @ingroup MathGroup
  */
-class VGLX_EXPORT Vector3 {
-public:
-    float x; ///< X component of the vector.
-    float y; ///< Y component of the vector.
-    float z; ///< Z component of the vector.
+struct VGLX_EXPORT Vector3 {
+    /// @brief X component.
+    float x;
+    /// @brief Y component.
+    float y;
+    /// @brief Z component.
+    float z;
 
     /**
-     * @brief Default constructor. Initializes to (0, 0, 0).
+     * @brief Constructs an uninitialized 3D vector.
      */
     constexpr Vector3() = default;
 
     /**
      * @brief Constructs a vector with all components set to the same value.
      *
-     * @param value Value to assign to x, y and z.
+     * @param value Value to assign to all components.
      */
     constexpr Vector3(float value) : Vector3(value, value, value) {}
 
     /**
-     * @brief Constructs a vector with specified x, y, and z components.
+     * @brief Constructs a vector from individual components.
      *
      * @param x X component.
      * @param y Y component.
@@ -52,112 +58,109 @@ public:
     constexpr Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
     /**
-     * @brief Returns the unit vector pointing forward (0, 0, 1).
-     *
-     * @return vglx::Vector3
+     * @brief Returns a unit vector pointing forward.
      */
-    [[nodiscard]] static constexpr auto Forward() { return Vector3 {0.0f, 0.0f, 1.0f}; }
+    [[nodiscard]] static constexpr auto Forward() -> Vector3 { return {0.0f, 0.0f, 1.0f}; }
 
     /**
-     * @brief Returns the unit vector pointing to the right (1, 0, 0).
-     *
-     * @return vglx::Vector3
+     * @brief Returns a unit vector pointing right.
      */
-    [[nodiscard]] static constexpr auto Right() { return Vector3 {1.0f, 0.0f, 0.0f}; }
+    [[nodiscard]] static constexpr auto Right() -> Vector3 { return {1.0f, 0.0f, 0.0f}; }
 
     /**
-     * @brief Returns the unit vector pointing upward (0, 1, 0).
-     *
-     * @return vglx::Vector3
+     * @brief Returns a unit vector pointing up.
      */
-    [[nodiscard]] static constexpr auto Up() { return Vector3 {0.0f, 1.0f, 0.0f}; }
+    [[nodiscard]] static constexpr auto Up() -> Vector3 { return {0.0f, 1.0f, 0.0f}; }
 
     /**
-     * @brief Returns a zero vector (0, 0, 0).
-     *
-     * @return vglx::Vector3
+     * @brief Returns the zero vector.
      */
-    [[nodiscard]] static constexpr auto Zero() { return Vector3 {0.0f}; }
+    [[nodiscard]] static constexpr auto Zero() -> Vector3 { return {0.0f}; }
 
     /**
-     * @brief Computes the approximate magnitude of the vector.
-     *
-     * This function uses a fast inverse square root approximation to compute the
-     * square root, which is significantly faster than the standard library `sqrt`,
-     * but introduces a small precision error (~0.001%).
-     *
-     * @return float Approximate vector length.
+     * @brief Returns the vector length.
      */
-    [[nodiscard]] constexpr auto Length() const { return math::Sqrt(Dot(*this, *this)); }
+    [[nodiscard]] constexpr auto Length() const -> float { return math::Sqrt(Dot(*this, *this)); }
 
     /**
-     * @brief Computes the squared length (magnitude) of the vector.
+     * @brief Returns the squared vector length.
      *
-     * This is a precise and inexpensive operation that avoids computing a square root.
-     * Use this when comparing relative lengths or avoiding unnecessary precision loss.
-     *
-     * @return float Exact length squared.
+     * Useful when comparing lengths without paying the cost of a square root.
      */
-    [[nodiscard]] constexpr auto LengthSquared() const { return Dot(*this, *this); }
+    [[nodiscard]] constexpr auto LengthSquared() const -> float { return Dot(*this, *this); }
 
     /**
-     * @brief Accesses vector components by index.
+     * @brief Accesses a component by index.
      *
-     * @param i Index (0 for x, 1 for y, 2 for z).
-     * @return float Reference to component.
+     * @param i Index: `0 → x`, `1 → y`, `2 → z`.
      */
-    [[nodiscard]] constexpr auto& operator[](int i) {
+    [[nodiscard]] constexpr auto operator[](int i) -> float& {
         assert(i >= 0 && i < 3);
         switch (i) {
             case 0: return x;
             case 1: return y;
             case 2: return z;
-            default: return x; // placeholder
+            default: return x; // unreachable
         }
     }
 
     /**
-     * @brief Accesses vector components by index (const).
+     * @brief Accesses a component by index.
      *
-     * @param i Index (0 for x, 1 for y, 2 for z).
-     * @return float Const reference to component.
+     * @param i Index: `0 → x`, `1 → y`, `2 → z`.
      */
-    [[nodiscard]] constexpr const auto& operator[](int i) const {
+    [[nodiscard]] constexpr auto operator[](int i) const -> const float {
         assert(i >= 0 && i < 3);
         switch (i) {
             case 0: return x;
             case 1: return y;
             case 2: return z;
-            default: return x; // placeholder
+            default: return x; // unreachable
         }
     }
 
-    /// @brief Adds another vector to this one.
-    constexpr auto& operator+=(const Vector3& v) {
+    /**
+     * @brief Adds another vector in-place.
+     *
+     * @param v Vector to add.
+     */
+    constexpr auto operator+=(const Vector3& v) -> Vector3& {
         x += v.x;
         y += v.y;
         z += v.z;
         return *this;
     }
 
-    /// @brief Subtracts another vector from this one.
-    constexpr auto& operator-=(const Vector3& v) {
+    /**
+     * @brief Subtracts another vector in-place.
+     *
+     * @param v Vector to subtract.
+     */
+    constexpr auto operator-=(const Vector3& v) -> Vector3& {
         x -= v.x;
         y -= v.y;
         z -= v.z;
         return *this;
     }
 
-    /// @brief Scales the vector by a scalar.
-    constexpr auto& operator*=(float n) {
+    /**
+     * @brief Multiplies the vector by a scalar in-place.
+     *
+     * @param n Scalar value.
+     */
+    constexpr auto operator*=(float n) -> Vector3& {
         x *= n;
         y *= n;
         z *= n;
         return *this;
     }
 
-    /// @brief Scales each component by another vector.
-    constexpr auto& operator*=(const Vector3& v) {
+    /**
+     * @brief Multiplies the vector component-wise by another vector in-place.
+     *
+     * @param v Vector to multiply.
+     */
+    constexpr auto operator*=(const Vector3& v) -> Vector3& {
         x *= v.x;
         y *= v.y;
         z *= v.z;
@@ -165,15 +168,11 @@ public:
     }
 
     /**
-     * @brief Component-wise in-place minimum.
-     *
-     * Sets each component of this vector to the smaller of the corresponding components
-     * in this vector and the given vector @p v.
+     * @brief Applies a component-wise minimum with another vector.
      *
      * @param v Vector to compare against.
-     * @return vglx::Vector3 Reference to this vector after modification.
      */
-    constexpr auto& Min(const Vector3& v) noexcept {
+    constexpr auto Min(const Vector3& v) -> Vector3& {
         x = std::min(x, v.x);
         y = std::min(y, v.y);
         z = std::min(z, v.z);
@@ -181,15 +180,11 @@ public:
     };
 
     /**
-     * @brief Component-wise in-place maximum.
-     *
-     * Sets each component of this vector to the larger of the corresponding components
-     * in this vector and the given vector @p v.
+     * @brief Applies a component-wise maximum with another vector.
      *
      * @param v Vector to compare against.
-     * @return vglx::Vector3 Reference to this vector after modification.
      */
-    constexpr auto& Max(const Vector3& v) noexcept {
+    constexpr auto Max(const Vector3& v) -> Vector3& {
         x = std::max(x, v.x);
         y = std::max(y, v.y);
         z = std::max(z, v.z);
@@ -200,60 +195,96 @@ public:
      * @brief Normalizes the vector in-place.
      *
      * If the length is zero, the vector is left unchanged.
-     *
-     * @return vglx::Vector3 Reference to this vector.
      */
-    constexpr auto& Normalize() {
+    constexpr auto Normalize() -> Vector3& {
         const auto len = Length();
         return len == 0.0f ? *this : (*this *= (1.0f / len));
     }
 
-private:
-    /// @brief Equality comparison operator.
-    [[nodiscard]] friend constexpr auto operator==(const Vector3& a, const Vector3& b) -> bool = default;
-
-    /// @brief Vector addition.
-    [[nodiscard]] friend constexpr auto operator+(const Vector3& a, const Vector3& b) {
-        return Vector3 {a.x + b.x, a.y + b.y, a.z + b.z};
-    }
-
-    /// @brief Vector subtraction.
-    [[nodiscard]] friend constexpr auto operator-(const Vector3& a, const Vector3& b) {
-        return Vector3 {a.x - b.x, a.y - b.y, a.z - b.z};
-    }
-
-    /// @brief Scalar multiplication (vector * scalar).
-    [[nodiscard]] friend constexpr auto operator*(const Vector3& v, float n) {
-        return Vector3 {v.x * n, v.y * n, v.z * n};
-    }
-
-    /// @brief Scalar multiplication (scalar * vector).
-    [[nodiscard]] friend constexpr auto operator*(float n, const Vector3& v) {
-        return v * n;
-    }
-
-    /// @brief Component-wise multiplication.
-    [[nodiscard]] friend constexpr auto operator*(const Vector3& a, const Vector3& b) {
-        return Vector3 {a.x * b.x, a.y * b.y, a.z * b.z};
-    }
-
-    /// @brief Scalar division.
-    [[nodiscard]] friend constexpr auto operator/(const Vector3& v, float n) {
-        n = 1.0f / n;
-        return Vector3 {v.x * n, v.y * n, v.z * n};
-    }
+    /**
+     * @brief Compares two vectors for equality.
+     */
+    constexpr auto operator==(const Vector3&) const -> bool = default;
 };
 
 /**
- * @brief Computes the cross product between two vectors.
- * @relatesalso Vector3
+ * @brief Adds two 3D vectors.
+ * @related Vector3
  *
  * @param a First vector.
  * @param b Second vector.
- * @return vglx::Vector3 Cross product (a × b).
  */
-[[nodiscard]] inline constexpr auto Cross(const Vector3& a, const Vector3& b) {
-    return Vector3 {
+[[nodiscard]] constexpr auto operator+(const Vector3& a, const Vector3& b) -> Vector3 {
+    return {a.x + b.x, a.y + b.y, a.z + b.z};
+}
+
+/**
+ * @brief Subtracts one 3D vector from another.
+ * @related Vector3
+ *
+ * @param a First vector.
+ * @param b Second vector.
+ */
+[[nodiscard]] constexpr auto operator-(const Vector3& a, const Vector3& b) -> Vector3 {
+    return {a.x - b.x, a.y - b.y, a.z - b.z};
+}
+
+/**
+ * @brief Multiplies a vector by a scalar.
+ * @related Vector3
+ *
+ * @param v Input vector.
+ * @param n Scalar value.
+ */
+[[nodiscard]] constexpr auto operator*(const Vector3& v, float n) -> Vector3 {
+    return {v.x * n, v.y * n, v.z * n};
+}
+
+/**
+ * @brief Multiplies a scalar by a vector.
+ * @related Vector3
+ *
+ * @param n Scalar value.
+ * @param v Input vector.
+ */
+[[nodiscard]] constexpr auto operator*(float n, const Vector3& v) -> Vector3 {
+    return v * n;
+}
+
+/**
+ * @brief Multiplies two vectors component-wise.
+ * @related Vector3
+ *
+ * @param a First vector.
+ * @param b Second vector.
+ */
+[[nodiscard]] constexpr auto operator*(const Vector3& a, const Vector3& b) -> Vector3 {
+    return {a.x * b.x, a.y * b.y, a.z * b.z};
+}
+
+/**
+ * @brief Divides a vector by a scalar.
+ * @related Vector3
+ *
+ * @param v Input vector.
+ * @param n Scalar value.
+ */
+[[nodiscard]] constexpr auto operator/(const Vector3& v, float n) -> Vector3 {
+    n = 1.0f / n;
+    return {v.x * n, v.y * n, v.z * n};
+}
+
+/**
+ * @brief Computes the cross product of two 3D vectors.
+ * @related Vector3
+ *
+ * Returns a vector perpendicular to both inputs, following the right-hand rule.
+ *
+ * @param a First vector.
+ * @param b Second vector.
+ */
+[[nodiscard]] constexpr auto Cross(const Vector3& a, const Vector3& b) -> Vector3 {
+    return {
         a.y * b.z - a.z * b.y,
         a.z * b.x - a.x * b.z,
         a.x * b.y - a.y * b.x
@@ -261,38 +292,40 @@ private:
 }
 
 /**
- * @brief Computes the dot product between two vectors.
- * @relatesalso Vector3
+ * @brief Computes the dot product of two 3D vectors.
+ * @related Vector3
+ *
+ * Computes the scalar product ($a_x b_x + a_y b_y + a_z b_z$), which measures
+ * how aligned the two vectors are.
  *
  * @param a First vector.
  * @param b Second vector.
- * @return float Dot product (a · b).
  */
-[[nodiscard]] inline constexpr auto Dot(const Vector3& a, const Vector3& b) -> float {
+[[nodiscard]] constexpr auto Dot(const Vector3& a, const Vector3& b) -> float {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 /**
- * @brief Linearly interpolates between two vectors.
- * @relatesalso Vector3
+ * @brief Linearly interpolates between two 3D vectors.
+ * @related Vector3
  *
  * @param v1 Start vector.
  * @param v2 End vector.
- * @param f Interpolation factor [0, 1].
- * @return vglx::Vector3 Interpolated vector.
+ * @param f Interpolation factor in $[0, 1]$.
  */
-[[nodiscard]] inline constexpr auto Lerp(const Vector3& v1, const Vector3& v2, float f) {
+[[nodiscard]] constexpr auto Lerp(const Vector3& v1, const Vector3& v2, float f) -> Vector3 {
     return v1 + (v2 - v1) * f;
 }
 
 /**
- * @brief Returns a normalized copy of the given vector.
- * @relatesalso Vector3
+ * @brief Returns a normalized copy of a vector.
+ * @related Vector3
+ *
+ * If the input has zero length, the zero vector is returned.
  *
  * @param v Input vector.
- * @return vglx::Vector3 Normalized vector or zero if the input is zero-length.
  */
-[[nodiscard]] inline constexpr auto Normalize(const Vector3& v) {
+[[nodiscard]] constexpr auto Normalize(const Vector3& v) -> Vector3 {
     const auto len = v.Length();
     return len == 0.0f ? Vector3::Zero() : v * (1.0f / len);
 }
