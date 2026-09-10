@@ -12,6 +12,7 @@
 #include <vglx/geometries/buffer_attribute.hpp>
 #include <vglx/geometries/geometry.hpp>
 #include <vglx/math/box3.hpp>
+#include <vglx/math/matrix4.hpp>
 
 #include <string>
 #include <utility>
@@ -39,6 +40,40 @@ auto create_tex_coords(std::vector<float> data) {
         .format = vglx::BufferAttribute::Format::Float32x2,
         .rate = vglx::BufferAttribute::Rate::Vertex
     }, std::move(data));
+}
+
+auto create_normals(std::vector<float> data) {
+    return vglx::BufferAttribute::Create({
+        .name = vglx::BufferAttribute::kNormal,
+        .format = vglx::BufferAttribute::Format::Float32x3,
+        .rate = vglx::BufferAttribute::Rate::Vertex
+    }, std::move(data));
+}
+
+auto create_tangents(std::vector<float> data) {
+    return vglx::BufferAttribute::Create({
+        .name = vglx::BufferAttribute::kTangent,
+        .format = vglx::BufferAttribute::Format::Float32x4,
+        .rate = vglx::BufferAttribute::Rate::Vertex
+    }, std::move(data));
+}
+
+auto create_translation(float x, float y, float z) {
+    return vglx::Matrix4 {
+        1.0f, 0.0f, 0.0f, x,
+        0.0f, 1.0f, 0.0f, y,
+        0.0f, 0.0f, 1.0f, z,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+}
+
+auto create_scale(float x, float y, float z) {
+    return vglx::Matrix4 {
+        x, 0.0f, 0.0f, 0.0f,
+        0.0f, y, 0.0f, 0.0f,
+        0.0f, 0.0f, z, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
 }
 
 }
@@ -232,6 +267,53 @@ TEST(Geometry, BoundingSphereInvalidatedWhenPositionDataChanges) {
 
     const auto after = geometry->BoundingSphere();
     EXPECT_NEAR(after.radius, 3.0f, 1e-4f);
+}
+
+#pragma endregion
+
+#pragma region Transform
+
+TEST(Geometry, ApplyTransformTranslatesPositions) {
+    auto geometry = vglx::Geometry::Create();
+    auto positions = create_positions(kTrianglePositions);
+    auto tex_coords = create_tex_coords({0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f});
+
+    geometry->AddAttribute(positions);
+    geometry->AddAttribute(tex_coords);
+    geometry->ApplyTransform(create_translation(1.0f, 2.0f, 3.0f));
+
+    const auto box = geometry->BoundingBox();
+
+    EXPECT_VEC3_EQ(box.min, {0.5f, 1.5f, 3.0f});
+    EXPECT_VEC3_EQ(box.max, {1.5f, 2.5f, 3.0f});
+    EXPECT_EQ(positions->GetVersion(), 1);
+    EXPECT_EQ(tex_coords->GetVersion(), 0);
+}
+
+TEST(Geometry, ApplyTransformScalesNormalsWithInverseTranspose) {
+    auto geometry = vglx::Geometry::Create();
+    auto normals = create_normals({0.7071f, 0.7071f, 0.0f});
+
+    geometry->AddAttribute(create_positions({0.0f, 0.0f, 0.0f}));
+    geometry->AddAttribute(normals);
+    geometry->ApplyTransform(create_scale(2.0f, 1.0f, 1.0f));
+
+    const auto& data = normals->GetData();
+
+    EXPECT_VEC3_NEAR({data[0], data[1], data[2]}, {0.4472f, 0.8944f, 0.0f}, 1e-4f);
+}
+
+TEST(Geometry, ApplyTransformFlipsTangentHandednessWhenMirrored) {
+    auto geometry = vglx::Geometry::Create();
+    auto tangents = create_tangents({1.0f, 0.0f, 0.0f, 1.0f});
+
+    geometry->AddAttribute(create_positions({0.0f, 0.0f, 0.0f}));
+    geometry->AddAttribute(tangents);
+    geometry->ApplyTransform(create_scale(-1.0f, 1.0f, 1.0f));
+
+    const auto& data = tangents->GetData();
+
+    EXPECT_VEC4_NEAR({data[0], data[1], data[2], data[3]}, {-1.0f, 0.0f, 0.0f, -1.0f}, 1e-4f);
 }
 
 #pragma endregion

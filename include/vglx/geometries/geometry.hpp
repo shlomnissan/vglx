@@ -12,6 +12,7 @@
 #include "vglx/core/disposable.hpp"
 #include "vglx/geometries/buffer_attribute.hpp"
 #include "vglx/math/box3.hpp"
+#include "vglx/math/matrix4.hpp"
 #include "vglx/math/sphere.hpp"
 
 #include <cstdint>
@@ -146,6 +147,17 @@ public:
      * across shared vertices, and stored with handedness in `w`.
      */
     auto GenerateTangents() -> void;
+
+    /**
+     * @brief Applies a transform to the geometry's vertex data.
+     *
+     * Positions are transformed by the matrix, normals by its inverse
+     * transpose and tangents by its upper $3 \times 3$ preserving handedness.
+     * Other attributes are left unchanged.
+     *
+     * @param transform Affine transform to apply.
+     */
+    auto ApplyTransform(const Matrix4& transform) -> void;
 
     /**
      * @brief Returns an axis-aligned bounding box that encloses the geometry.

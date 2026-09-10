@@ -7,6 +7,7 @@
 
 #include "vglx/geometries/geometry.hpp"
 
+#include "vglx/math/matrix3.hpp"
 #include "vglx/math/utilities.hpp"
 #include "vglx/math/vector3.hpp"
 
@@ -160,6 +161,55 @@ auto Geometry::GenerateTangents() -> void {
             .format = BufferAttribute::Format::Float32x4,
             .rate = BufferAttribute::Rate::Vertex
         }, std::move(tangents)));
+    }
+}
+
+auto Geometry::ApplyTransform(const Matrix4& transform) -> void {
+    using enum BufferAttribute::Format;
+
+    auto position_attr = GetAttribute(BufferAttribute::kPosition);
+    if (!position_attr || position_attr->format != Float32x3 || position_attr->GetData().empty()) {
+        Logger::Log(LogLevel::Error, "Failed to apply transform. Missing or invalid vertex position buffer");
+        return;
+    }
+
+    auto linear_transform = Matrix3 {transform};
+    if (Determinant(linear_transform) == 0.0f) {
+        Logger::Log(LogLevel::Error, "Failed to apply transform. Singular transformation cannot be applied to normals");
+        return;
+    }
+
+    auto positions = position_attr->GetData();
+    for (auto i = std::size_t {0}; i < positions.size(); i += position_attr->Components()) {
+        auto p = transform * Vector3 {positions[i + 0], positions[i + 1], positions[i + 2]};
+        positions[i + 0] = p.x; positions[i + 1] = p.y; positions[i + 2] = p.z;
+    }
+
+    position_attr->SetData(std::move(positions));
+
+    auto normal_attr = GetAttribute(BufferAttribute::kNormal);
+    auto has_normals = normal_attr && normal_attr->format == Float32x3 && !normal_attr->GetData().empty();
+    if (has_normals) {
+        auto normal_matrix = Transpose(Inverse(linear_transform));
+        auto normals = normal_attr->GetData();
+        for (auto i = std::size_t {0}; i < normals.size(); i += normal_attr->Components()) {
+            auto n = Normalize(normal_matrix * Vector3 {normals[i + 0], normals[i + 1], normals[i + 2]});
+            normals[i + 0] = n.x; normals[i + 1] = n.y; normals[i + 2] = n.z;
+        }
+        normal_attr->SetData(std::move(normals));
+    }
+
+    auto tangent_attr = GetAttribute(BufferAttribute::kTangent);
+    auto has_tangents = tangent_attr && tangent_attr->format == Float32x4 && !tangent_attr->GetData().empty();
+    if (has_tangents) {
+        auto handedness_sign = Determinant(linear_transform) < 0.0f ? -1.0f : 1.0f;
+        auto tangents = tangent_attr->GetData();
+        for (auto i = std::size_t {0}; i < tangents.size(); i += tangent_attr->Components()) {
+            auto t = Normalize(linear_transform * Vector3 {tangents[i + 0], tangents[i + 1], tangents[i + 2]});
+            tangents[i + 0] = t.x; tangents[i + 1] = t.y; tangents[i + 2] = t.z;
+            tangents[i + 3] *= handedness_sign;
+        }
+        tangent_attr->SetData(std::move(tangents));
     }
 }
 
