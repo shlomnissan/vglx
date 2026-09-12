@@ -9,13 +9,13 @@
 
 #include "vglx/core/renderer.hpp"
 #include "vglx/materials/depth_material.hpp"
+#include "vglx/math/matrix4.hpp"
 #include "vglx/math/vector2.hpp"
 #include "vglx/scene/renderable.hpp"
 
 #include "renderer/gl/gl_background_pass.hpp"
 #include "renderer/gl/gl_binding_state.hpp"
 #include "renderer/gl/gl_buffers.hpp"
-#include "renderer/gl/gl_camera.hpp"
 #include "renderer/gl/gl_device.hpp"
 #include "renderer/gl/gl_environment.hpp"
 #include "renderer/gl/gl_framebuffers.hpp"
@@ -26,6 +26,7 @@
 #include "renderer/gl/gl_shadow_maps.hpp"
 #include "renderer/gl/gl_state.hpp"
 #include "renderer/gl/gl_textures.hpp"
+#include "renderer/gl/gl_uniform_buffer.hpp"
 
 #include <expected>
 #include <memory>
@@ -35,6 +36,11 @@ namespace vglx {
 
 class RenderLists;
 class RenderTarget;
+
+struct alignas(16) CameraUniforms {
+    Matrix4 projection;
+    Matrix4 view;
+};
 
 class Renderer::Impl {
 public:
@@ -80,7 +86,7 @@ public:
 
 private:
     GLBackgroundPass background_pass_;
-    GLCamera camera_ubo_;
+    CameraUniforms camera_ {};
     GLEnvironment environment_;
     GLLights lights_;
     GLPresentPass present_pass_;
@@ -94,6 +100,8 @@ private:
     GLBindingState binding_state_ {buffers_};
 
     Vector2 resolution_ {0.0f, 0.0f};
+
+    GLUniformBuffer camera_uniforms_ {"ub_Camera", sizeof(CameraUniforms)};
 
     int viewport_width_ {0};
     int viewport_height_ {0};
@@ -131,6 +139,8 @@ private:
         Camera* camera,
         Scene* scene
     ) -> void;
+
+    auto UpdateCameraUniforms(Camera* camera) -> void;
 };
 
 }

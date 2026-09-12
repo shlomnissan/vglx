@@ -56,7 +56,6 @@ set(SOURCE_CODE
     "renderer/gl/gl_background_pass.hpp"
     "renderer/gl/gl_binding_state.cpp"
     "renderer/gl/gl_binding_state.hpp"
-    "renderer/gl/gl_camera.hpp"
     "renderer/gl/gl_device.cpp"
     "renderer/gl/gl_device.hpp"
     "renderer/gl/gl_environment.cpp"

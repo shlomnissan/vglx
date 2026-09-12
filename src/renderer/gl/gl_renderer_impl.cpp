@@ -440,6 +440,12 @@ auto Renderer::Impl::SetUniforms(
     }
 }
 
+auto Renderer::Impl::UpdateCameraUniforms(Camera* camera) -> void {
+    camera_.projection = camera->projection_matrix;
+    camera_.view = camera->view_matrix;
+    camera_uniforms_.UploadIfNeeded(&camera_, sizeof(camera_));
+}
+
 auto Renderer::Impl::ProcessLights(Camera* camera) -> void {
     lights_.Reset();
 
@@ -539,7 +545,7 @@ auto Renderer::Impl::RenderShadowMaps(Scene* scene, Camera* camera) -> void {
         glClear(GL_DEPTH_BUFFER_BIT);
 
         shadow_render_lists_->ProcessScene(scene, shadow_camera, false);
-        camera_ubo_.Update(shadow_camera->projection_matrix, shadow_camera->view_matrix);
+        UpdateCameraUniforms(shadow_camera);
 
         for (auto renderable : shadow_render_lists_->Opaque()) {
             if (!renderable->cast_shadow) continue;
@@ -715,7 +721,7 @@ auto Renderer::Impl::Render(Scene* scene, Camera* camera, RenderTarget* target) 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    camera_ubo_.Update(camera->projection_matrix, camera->view_matrix);
+    UpdateCameraUniforms(camera);
 
     ProcessLights(camera);
 
