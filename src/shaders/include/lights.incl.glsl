@@ -37,14 +37,14 @@ float attenuation(const in float dist, const in Light light) {
 }
 
 #ifdef USE_SHADOW_MAPS
-float shadowFactor(const in Light light) {
+float shadowFactor(const in Light light, const in vec4 position) {
     if (!u_ReceiveShadow || light.ShadowLayerIndex < 0) {
         return 1.0;
     }
 
     #ifdef USE_POINT_SHADOW_MAPS
     if (light.Type == 2 /* point light */) {
-        vec3 dir = v_Position.xyz - light.Position;
+        vec3 dir = position.xyz - light.Position;
         dir = transpose(mat3(u_View)) * dir;
 
         float axis = max(abs(dir.x), max(abs(dir.y), abs(dir.z)));
@@ -81,7 +81,7 @@ float shadowFactor(const in Light light) {
     }
     #endif
 
-    vec4 coord = light.ShadowTransform * v_Position;
+    vec4 coord = light.ShadowTransform * position;
     vec3 proj = coord.xyz / coord.w;
     if (proj.z > 1.0) {
         return 1.0;
@@ -104,7 +104,7 @@ float shadowFactor(const in Light light) {
     return texture(u_ShadowMaps2D, vec4(proj.xy, float(light.ShadowLayerIndex), ref));
 }
 #else
-float shadowFactor(const in Light light) {
+float shadowFactor(const in Light light, const in vec4 position) {
     return 1.0;
 }
 #endif

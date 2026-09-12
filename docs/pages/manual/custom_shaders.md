@@ -151,22 +151,25 @@ layout(std140) uniform ub_Camera {
 
 The `#pragma inject_attributes` directive injects preprocessor definitions that describe the material and scene configuration, allowing a single shader source to adapt to its rendering context. These are the definitions relevant to shader materials:
 
-| Name                | Description                                          |
-| ------------------- | ---------------------------------------------------- |
-| `USE_INSTANCING`    | The material is rendered by an instanced mesh        |
-| `USE_FOG`           | The material has fog enabled and the scene defines it |
-| `USE_ALPHA_TEST`    | The material's alpha test threshold is set           |
-| `USE_FLAT_SHADED`   | The material is flat shaded                          |
-| `USE_FLIP_NORMALS`  | The material renders back or double-sided faces      |
-| `USE_VERTEX_COLOR`  | The geometry provides an `a_Color` attribute         |
-| `NUM_LIGHTS`        | Number of active lights in the scene (always defined) |
+| Name                    | Description                                           |
+| ----------------------- | ----------------------------------------------------- |
+| `USE_INSTANCING`        | The material is rendered by an instanced mesh         |
+| `USE_FOG`               | The material has fog enabled and the scene defines it |
+| `USE_ALPHA_TEST`        | The material's alpha test threshold is set            |
+| `USE_FLAT_SHADED`       | The material is flat shaded                           |
+| `USE_FLIP_NORMALS`      | The material renders back or double-sided faces       |
+| `USE_VERTEX_COLOR`      | The geometry provides an `a_Color` attribute          |
+| `USE_SHADOW_MAPS`       | Shadow maps are enabled and a light casts shadows     |
+| `USE_PCF_SHADOWS`       | Shadow maps use percentage-closer filtering           |
+| `USE_POINT_SHADOW_MAPS` | A point light casts shadows                           |
+| `NUM_LIGHTS`            | Number of active lights in the scene (always defined) |
 
 #### Includes
 
 Two shader includes can be brought into fragment shaders using standard `#include` directives. They are self-contained functions resolved by the engine before compilation:
 
 - `include/fog.incl.glsl` defines the `Fog` uniform struct and `applyFog(inout vec3 color, const in float depth)`. Its contents are gated behind `USE_FOG` so it is safe to include unconditionally. The depth argument is the fragment's view-space depth, which the vertex stage typically provides through a varying.
-- `include/lights.incl.glsl` defines the `Light` struct, the `ub_Lights` uniform block, and the `attenuation` and `shadowFactor` helpers used by the built-in lit materials. It must be included inside an `#if NUM_LIGHTS > 0` block. The light data is uploaded by the engine automatically so including the file is all that is needed to iterate the scene's lights.
+- `include/lights.incl.glsl` defines the `Light` struct, the `ub_Lights` uniform block, and the `attenuation` and `shadowFactor` helpers used by the built-in lit materials. It must be included inside an `#if NUM_LIGHTS > 0` block. The light data is uploaded by the engine automatically so including the file is all that is needed to iterate the scene's lights. The position argument of `shadowFactor` is the fragment's view-space position, which the vertex stage typically provides through a varying. Note that point light shadows additionally require the `ub_Camera` uniform block to be declared in the fragment stage.
 
 ## Custom Uniforms
 

@@ -107,7 +107,7 @@ vec3 processLights(
         Light light = u_Lights[i];
 
         if (light.Type == 1 /* directional light */) {
-            output_color += shadowFactor(light) * phongShading(
+            output_color += shadowFactor(light, v_Position) * phongShading(
                 light.Direction,
                 light.Color,
                 normal,
@@ -120,7 +120,7 @@ vec3 processLights(
         if (light.Type == 2 /* point light */) {
             vec3 light_dir = normalize(light.Position - v_Position.xyz);
             float dist = length(light.Position - v_Position.xyz);
-            output_color += shadowFactor(light) * attenuation(dist, light) * phongShading(
+            output_color += shadowFactor(light, v_Position) * attenuation(dist, light) * phongShading(
                 light_dir,
                 light.Color,
                 normal,
@@ -136,7 +136,7 @@ vec3 processLights(
             float angle_cos = dot(light_dir, light.Direction);
             if (angle_cos > light.ConeCos) {
                 vec3 spot_color = light.Color * smoothstep(light.ConeCos, light.PenumbraCos, angle_cos);
-                output_color += shadowFactor(light) * attenuation(dist, light) * phongShading(
+                output_color += shadowFactor(light, v_Position) * attenuation(dist, light) * phongShading(
                     light_dir,
                     spot_color,
                     normal,

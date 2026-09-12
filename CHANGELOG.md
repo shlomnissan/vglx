@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Added
 
+- Shadow map support for custom shader materials
 - `Geometry::ApplyTransform` for baking a transform into vertex data
 - Protected default constructor for `Mesh` subclasses
 

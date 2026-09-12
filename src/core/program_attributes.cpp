@@ -72,6 +72,9 @@ ProgramAttributes::ProgramAttributes(
         shader_material_id = m->shader_material_id_;
         vertex_shader = m->vertex_shader_;
         fragment_shader = m->fragment_shader_;
+        shadow_maps = lights.enable_shadow_maps;
+        pcf_shadows = lights.enable_pcf_shadows;
+        point_shadow_maps = lights.enable_point_shadow_maps;
     }
 
     if (type == Material::Type::BillboardMaterial) {

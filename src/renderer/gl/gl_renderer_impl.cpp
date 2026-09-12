@@ -395,6 +395,21 @@ auto Renderer::Impl::SetUniforms(
                 program->SetUniform(Uniform::TextureTransform, &transform);
             }
         }
+
+        if (attrs->shadow_maps) {
+            auto texture_unit = next_texture_unit++;
+            glActiveTexture(GL_TEXTURE0 + texture_unit);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_maps_.GetTexture2D());
+            program->SetUniform(Uniform::ShadowMaps2D, &texture_unit);
+            program->SetUniform(Uniform::ReceiveShadow, &renderable->receive_shadow);
+
+            if (attrs->point_shadow_maps) {
+                auto point_texture_unit = next_texture_unit++;
+                glActiveTexture(GL_TEXTURE0 + point_texture_unit);
+                glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, shadow_maps_.GetPointTexture());
+                program->SetUniform(Uniform::PointShadowMaps, &point_texture_unit);
+            }
+        }
     }
 
     if (attrs->type == Material::Type::BillboardMaterial) {
