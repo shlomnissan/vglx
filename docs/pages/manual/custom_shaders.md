@@ -137,6 +137,7 @@ Built-in uniforms provide per-draw or per-frame state supplied by the engine. De
 | `u_Opacity`          | `float` | Alpha factor                                |
 | `u_AlphaTest`        | `float` | Alpha cutoff                                |
 | `u_Resolution`       | `vec2`  | Framebuffer resolution in pixels            |
+| `u_AmbientLight`     | `vec3`  | Ambient light color scaled by intensity     |
 
 The camera matrices are provided through a uniform block. Declaring the block makes both matrices available and the engine binds it automatically:
 

@@ -250,6 +250,10 @@ auto Renderer::Impl::SetUniforms(
         }
     }
 
+    if (lights_.HasLights()) {
+        program->SetUniform(Uniform::AmbientLight, &lights_.ambient_light);
+    }
+
     if (attrs->type == Material::Type::PBRMaterial) {
         auto m = static_cast<PBRMaterial*>(material);
 
@@ -278,7 +282,6 @@ auto Renderer::Impl::SetUniforms(
         }
 
         if (lights_.HasLights()) {
-            program->SetUniform(Uniform::AmbientLight, &lights_.ambient_light);
             program->SetUniform(Uniform::MaterialColor, &m->color);
             program->SetUniform(Uniform::MaterialMetallic, &m->metallic);
             program->SetUniform(Uniform::MaterialRoughness, &m->roughness);
@@ -330,7 +333,6 @@ auto Renderer::Impl::SetUniforms(
     if (attrs->type == Material::Type::PhongMaterial) {
         auto m = static_cast<PhongMaterial*>(material);
         if (lights_.HasLights()) {
-            program->SetUniform(Uniform::AmbientLight, &lights_.ambient_light);
             program->SetUniform(Uniform::MaterialDiffuseColor, &m->color);
             program->SetUniform(Uniform::MaterialSpecularColor, &m->specular_color);
             program->SetUniform(Uniform::MaterialShininess, &m->shininess);
