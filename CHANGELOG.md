@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Frame uniform block exposing resolution, content scale, and elapsed time
 - Protected default constructor for `Mesh` subclasses
 - `Geometry::ApplyTransform` for baking a transform into vertex data
+- Gamepad input through `GamepadEvent` and `Node::OnGamepadEvent`
 
 ### Changed
 
@@ -21,10 +22,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 ### Fixed
 
 - Crash when rendering a node with a null material
-
-### Removed
-
-- Undocumented static helpers on `Renderable`
 
 ## [0.1.0] - 2026-09-01
 

@@ -11,5 +11,6 @@
  * @defgroup EventsGroup Events
  * @brief Event types for input and scene management.
  */
+#include "vglx/events/gamepad_event.hpp"
 #include "vglx/events/keyboard_event.hpp"
 #include "vglx/events/mouse_event.hpp"

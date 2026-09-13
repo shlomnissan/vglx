@@ -29,6 +29,7 @@ struct VGLX_EXPORT Event {
     enum class Type {
         Keyboard, ///< Event triggered by keyboard input.
         Mouse, ///< Event triggered by mouse input.
+        Gamepad, ///< Event triggered by gamepad input.
         Undefined ///< Fallback for undefined or uninitialized event types.
     };
 

@@ -115,6 +115,7 @@ set(PUBLIC_HEADERS
     "${PUBLIC_HEADERS_DIR}/core/renderer.hpp"
     "${PUBLIC_HEADERS_DIR}/core/window.hpp"
     "${PUBLIC_HEADERS_DIR}/events/event.hpp"
+    "${PUBLIC_HEADERS_DIR}/events/gamepad_event.hpp"
     "${PUBLIC_HEADERS_DIR}/events/keyboard_event.hpp"
     "${PUBLIC_HEADERS_DIR}/events/mouse_event.hpp"
     "${PUBLIC_HEADERS_DIR}/geometries/buffer_attribute.hpp"

@@ -10,6 +10,7 @@
 #include "vglx_export.h"
 
 #include "vglx/core/identity.hpp"
+#include "vglx/events/gamepad_event.hpp"
 #include "vglx/events/keyboard_event.hpp"
 #include "vglx/events/mouse_event.hpp"
 #include "vglx/math/matrix4.hpp"
@@ -315,6 +316,16 @@ public:
      * @param event Mouse event pointer.
      */
     virtual auto OnMouseEvent(MouseEvent* event) -> void {}
+
+    /**
+     * @brief Gamepad event handler.
+     *
+     * Override this to react to gamepad connection, button, or axis events.
+     * Events can be marked as handled to stop propagation.
+     *
+     * @param event Gamepad event pointer.
+     */
+    virtual auto OnGamepadEvent(GamepadEvent* event) -> void {}
 
     /// @}
 

@@ -36,6 +36,8 @@ auto handle_input_event(Node* node, Event* event) -> void {
         node->OnKeyboardEvent(static_cast<KeyboardEvent*>(event));
     if (type == Mouse)
         node->OnMouseEvent(static_cast<MouseEvent*>(event));
+    if (type == Gamepad)
+        node->OnGamepadEvent(static_cast<GamepadEvent*>(event));
 }
 
 }
@@ -50,9 +52,10 @@ Scene::Scene() : impl_(std::make_unique<Impl>()) {
     impl_->event_listener = std::make_shared<EventListener>([&](Event* event) {
         auto type = event->GetType();
 
-        if (type == Keyboard || type == Mouse) {
+        if (type == Keyboard || type == Mouse || type == Gamepad) {
             if (type == Keyboard) OnKeyboardEvent(static_cast<KeyboardEvent*>(event));
             if (type == Mouse) OnMouseEvent(static_cast<MouseEvent*>(event));
+            if (type == Gamepad) OnGamepadEvent(static_cast<GamepadEvent*>(event));
             for (const auto& child : GetChildren()) {
                 handle_input_event(child.get(), event);
             }
@@ -61,6 +64,7 @@ Scene::Scene() : impl_(std::make_unique<Impl>()) {
 
     EventDispatcher::Get().AddEventListener("keyboard_event", impl_->event_listener);
     EventDispatcher::Get().AddEventListener("mouse_event", impl_->event_listener);
+    EventDispatcher::Get().AddEventListener("gamepad_event", impl_->event_listener);
 
     AttachSubtree(this);
 }
@@ -75,6 +79,7 @@ auto Scene::Advance(float delta) -> void {
 Scene::~Scene() {
     EventDispatcher::Get().RemoveEventListener("keyboard_event", impl_->event_listener);
     EventDispatcher::Get().RemoveEventListener("mouse_event", impl_->event_listener);
+    EventDispatcher::Get().RemoveEventListener("gamepad_event", impl_->event_listener);
 }
 
 }

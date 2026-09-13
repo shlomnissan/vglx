@@ -7,12 +7,15 @@
 
 #include "core/window_impl.hpp"
 
+#include "vglx/events/gamepad_event.hpp"
 #include "vglx/events/keyboard_event.hpp"
 #include "vglx/events/mouse_event.hpp"
 
 #include "events/event_dispatcher.hpp"
 #include "utilities/logger.hpp"
 
+#include <array>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,6 +33,13 @@ auto glfw_key_callback(GLFWwindow*, int key, int scancode, int action, int mods)
 auto glfw_cursor_pos_callback(GLFWwindow*, double x, double y) -> void;
 auto glfw_mouse_button_callback(GLFWwindow*, int button, int action, int mods) -> void;
 auto glfw_scroll_callback(GLFWwindow*, double x, double y) -> void;
+auto glfw_joystick_callback(int jid, int event) -> void;
+auto glfw_poll_gamepads() -> void;
+auto glfw_gamepad_button_map(int button) -> GamepadButton;
+auto glfw_gamepad_axis_map(int axis) -> GamepadAxis;
+auto glfw_gamepad_axis_value(int axis, float value) -> float;
+auto glfw_gamepads = std::array<GLFWgamepadstate, GLFW_JOYSTICK_LAST + 1> {};
+auto glfw_gamepads_connected = std::array<bool, GLFW_JOYSTICK_LAST + 1> {};
 auto glfw_mouse_button_map(int button) -> MouseButton;
 auto glfw_mouse_mod_map(int mods) -> int;
 auto glfw_mouse_mods = 0;
@@ -89,10 +99,16 @@ auto Window::Impl::Initialize() -> std::expected<void, std::string> {
     glfwSetKeyCallback(window_, glfw_key_callback);
     glfwSetCursorPosCallback(window_, glfw_cursor_pos_callback);
     glfwSetMouseButtonCallback(window_, glfw_mouse_button_callback);
+    glfwSetJoystickCallback(glfw_joystick_callback);
     glfwSetScrollCallback(window_, glfw_scroll_callback);
     glfwSetFramebufferSizeCallback(window_, glfw_framebuffer_size_callback);
     glfwSetWindowSizeCallback(window_, glfw_window_size_callback);
     glfwSetWindowContentScaleCallback(window_, glfw_window_content_scale_callback);
+
+    // The joystick callback only fires for gamepads connected after initialization.
+    for (auto jid = 0; jid <= GLFW_JOYSTICK_LAST; ++jid) {
+        glfw_gamepads_connected[jid] = glfwGetGamepadState(jid, &glfw_gamepads[jid]);
+    }
 
 #ifdef VGLX_USE_IMGUI
     imgui_initialize(window_);
@@ -103,14 +119,15 @@ auto Window::Impl::Initialize() -> std::expected<void, std::string> {
 
 auto Window::Impl::PollEvents() -> void {
     glfwPollEvents();
+    glfw_poll_gamepads();
     if (did_resize) {
         if (resize_callback_) {
             resize_callback_({
-                framebuffer_width,
-                framebuffer_height,
-                window_width,
-                window_height,
-                content_scale
+                .framebuffer_width = framebuffer_width,
+                .framebuffer_height = framebuffer_height,
+                .window_width = window_width,
+                .window_height = window_height,
+                .content_scale = content_scale
             });
             did_resize = false;
         }
@@ -238,6 +255,137 @@ auto glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int 
         event->type = MouseEvent::Type::ButtonReleased;
         EventDispatcher::Get().Dispatch("mouse_event", std::move(event));
     }
+}
+
+auto glfw_joystick_callback(int jid, int event) -> void {
+    auto gamepad_event = std::make_unique<GamepadEvent>();
+    gamepad_event->gamepad = jid;
+    gamepad_event->button = GamepadButton::None;
+    gamepad_event->axis = GamepadAxis::None;
+    gamepad_event->value = 0.0f;
+
+    if (event == GLFW_CONNECTED && glfwJoystickIsGamepad(jid)) {
+        glfwGetGamepadState(jid, &glfw_gamepads[jid]);
+        glfw_gamepads_connected[jid] = true;
+        gamepad_event->type = GamepadEvent::Type::Connected;
+        EventDispatcher::Get().Dispatch("gamepad_event", std::move(gamepad_event));
+    }
+
+    if (event == GLFW_DISCONNECTED && glfw_gamepads_connected[jid]) {
+        glfw_gamepads_connected[jid] = false;
+        auto& prev = glfw_gamepads[jid];
+
+        for (auto button = 0; button <= GLFW_GAMEPAD_BUTTON_LAST; ++button) {
+            if (prev.buttons[button] != GLFW_PRESS) continue;
+
+            auto release_event = std::make_unique<GamepadEvent>();
+            release_event->type = GamepadEvent::Type::ButtonReleased;
+            release_event->gamepad = jid;
+            release_event->button = glfw_gamepad_button_map(button);
+            release_event->axis = GamepadAxis::None;
+            release_event->value = 0.0f;
+
+            EventDispatcher::Get().Dispatch("gamepad_event", std::move(release_event));
+        }
+
+        for (auto axis = 0; axis <= GLFW_GAMEPAD_AXIS_LAST; ++axis) {
+            if (glfw_gamepad_axis_value(axis, prev.axes[axis]) == 0.0f) continue;
+
+            auto axis_event = std::make_unique<GamepadEvent>();
+            axis_event->type = GamepadEvent::Type::AxisMoved;
+            axis_event->gamepad = jid;
+            axis_event->button = GamepadButton::None;
+            axis_event->axis = glfw_gamepad_axis_map(axis);
+            axis_event->value = 0.0f;
+
+            EventDispatcher::Get().Dispatch("gamepad_event", std::move(axis_event));
+        }
+
+        gamepad_event->type = GamepadEvent::Type::Disconnected;
+        EventDispatcher::Get().Dispatch("gamepad_event", std::move(gamepad_event));
+    }
+}
+
+auto glfw_poll_gamepads() -> void {
+    for (auto jid = 0; jid <= GLFW_JOYSTICK_LAST; ++jid) {
+        auto state = GLFWgamepadstate {};
+        if (!glfwGetGamepadState(jid, &state)) continue;
+
+        auto& prev = glfw_gamepads[jid];
+
+        for (auto button = 0; button <= GLFW_GAMEPAD_BUTTON_LAST; ++button) {
+            if (state.buttons[button] == prev.buttons[button]) continue;
+
+            auto event = std::make_unique<GamepadEvent>();
+            event->type = state.buttons[button] == GLFW_PRESS
+                ? GamepadEvent::Type::ButtonPressed
+                : GamepadEvent::Type::ButtonReleased;
+            event->gamepad = jid;
+            event->button = glfw_gamepad_button_map(button);
+            event->axis = GamepadAxis::None;
+            event->value = 0.0f;
+
+            EventDispatcher::Get().Dispatch("gamepad_event", std::move(event));
+        }
+
+        for (auto axis = 0; axis <= GLFW_GAMEPAD_AXIS_LAST; ++axis) {
+            auto value = glfw_gamepad_axis_value(axis, state.axes[axis]);
+            if (value == glfw_gamepad_axis_value(axis, prev.axes[axis])) continue;
+
+            auto event = std::make_unique<GamepadEvent>();
+            event->type = GamepadEvent::Type::AxisMoved;
+            event->gamepad = jid;
+            event->button = GamepadButton::None;
+            event->axis = glfw_gamepad_axis_map(axis);
+            event->value = value;
+
+            EventDispatcher::Get().Dispatch("gamepad_event", std::move(event));
+        }
+
+        prev = state;
+    }
+}
+
+auto glfw_gamepad_button_map(int button) -> GamepadButton {
+    switch(button) {
+        case GLFW_GAMEPAD_BUTTON_A: return GamepadButton::RightFaceDown;
+        case GLFW_GAMEPAD_BUTTON_B: return GamepadButton::RightFaceRight;
+        case GLFW_GAMEPAD_BUTTON_X: return GamepadButton::RightFaceLeft;
+        case GLFW_GAMEPAD_BUTTON_Y: return GamepadButton::RightFaceUp;
+        case GLFW_GAMEPAD_BUTTON_LEFT_BUMPER: return GamepadButton::LeftBumper;
+        case GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER: return GamepadButton::RightBumper;
+        case GLFW_GAMEPAD_BUTTON_BACK: return GamepadButton::Back;
+        case GLFW_GAMEPAD_BUTTON_START: return GamepadButton::Start;
+        case GLFW_GAMEPAD_BUTTON_GUIDE: return GamepadButton::Guide;
+        case GLFW_GAMEPAD_BUTTON_LEFT_THUMB: return GamepadButton::LeftThumb;
+        case GLFW_GAMEPAD_BUTTON_RIGHT_THUMB: return GamepadButton::RightThumb;
+        case GLFW_GAMEPAD_BUTTON_DPAD_UP: return GamepadButton::DpadUp;
+        case GLFW_GAMEPAD_BUTTON_DPAD_RIGHT: return GamepadButton::DpadRight;
+        case GLFW_GAMEPAD_BUTTON_DPAD_DOWN: return GamepadButton::DpadDown;
+        case GLFW_GAMEPAD_BUTTON_DPAD_LEFT: return GamepadButton::DpadLeft;
+        default: Logger::Log(LogLevel::Error, "Unrecognized GLFW gamepad button {}", button);
+    }
+    return GamepadButton::None;
+}
+
+auto glfw_gamepad_axis_map(int axis) -> GamepadAxis {
+    switch(axis) {
+        case GLFW_GAMEPAD_AXIS_LEFT_X: return GamepadAxis::LeftX;
+        case GLFW_GAMEPAD_AXIS_LEFT_Y: return GamepadAxis::LeftY;
+        case GLFW_GAMEPAD_AXIS_RIGHT_X: return GamepadAxis::RightX;
+        case GLFW_GAMEPAD_AXIS_RIGHT_Y: return GamepadAxis::RightY;
+        case GLFW_GAMEPAD_AXIS_LEFT_TRIGGER: return GamepadAxis::LeftTrigger;
+        case GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER: return GamepadAxis::RightTrigger;
+        default: Logger::Log(LogLevel::Error, "Unrecognized GLFW gamepad axis {}", axis);
+    }
+    return GamepadAxis::None;
+}
+
+auto glfw_gamepad_axis_value(int axis, float value) -> float {
+    if (axis == GLFW_GAMEPAD_AXIS_LEFT_TRIGGER || axis == GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER) {
+        return (value + 1.0f) * 0.5f;
+    }
+    return std::abs(value) < 0.1f ? 0.0f : value;
 }
 
 auto glfw_scroll_callback(GLFWwindow* window, double x, double y) -> void {
