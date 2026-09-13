@@ -40,7 +40,7 @@ class RenderTarget;
 
 struct alignas(16) FrameUniforms {
     Vector2 resolution {0.0f};
-    Vector2 scale {1.0f};
+    Vector2 content_scale {1.0f};
     float time {0.0f};
 };
 
@@ -65,7 +65,7 @@ public:
 
     auto Clear(RenderTarget* target = nullptr) -> void;
 
-    auto SetViewport(int x, int y, int width, int height, Vector2 scale) -> void;
+    auto SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void;
 
     auto SetClearColor(const Color& color) -> void;
 

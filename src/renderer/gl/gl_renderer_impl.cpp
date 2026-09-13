@@ -753,12 +753,12 @@ auto Renderer::Impl::Clear(RenderTarget* target) -> void {
     framebuffers_.Reset();
 }
 
-auto Renderer::Impl::SetViewport(int x, int y, int width, int height, Vector2 scale) -> void {
+auto Renderer::Impl::SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void {
     viewport_width_ = width;
     viewport_height_ = height;
     state_.SetViewport(x, y, width, height);
     scene_buffer_.ResizeViewport(width, height);
-    frame_.scale = scale;
+    frame_.content_scale = content_scale;
 }
 
 auto Renderer::Impl::SetClearColor(const Color& color) -> void {

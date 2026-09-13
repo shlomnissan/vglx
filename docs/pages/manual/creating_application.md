@@ -216,7 +216,7 @@ window.OnResize([&](const ResizeParameters& params) {
     renderer.SetViewport(0, 0,
         params.framebuffer_width,
         params.framebuffer_height,
-        params.scale
+        params.content_scale
     );
     camera->Resize(params.window_width, params.window_height);
 });
@@ -335,7 +335,7 @@ auto main() -> int {
         renderer.SetViewport(0, 0,
             params.framebuffer_width,
             params.framebuffer_height,
-            params.scale
+            params.content_scale
         );
         camera->Resize(params.window_width, params.window_height);
     });

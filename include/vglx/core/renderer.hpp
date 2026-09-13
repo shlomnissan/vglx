@@ -170,9 +170,10 @@ public:
      * @param y Bottom pixel of the viewport.
      * @param width Viewport width in pixels.
      * @param height Viewport height in pixels.
-     * @param scale DPI scale factor per axis.
+     * @param content_scale Content scale per axis: the display's DPI relative
+     * to the platform default.
      */
-    auto SetViewport(int x, int y, int width, int height, Vector2 scale) -> void;
+    auto SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void;
 
     /**
      * @brief Sets the clear color for subsequent frames.

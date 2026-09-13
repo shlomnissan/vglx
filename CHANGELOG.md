@@ -10,13 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Shadow map support for custom shader materials
 - Ambient light uniform for custom shader materials
-- Frame uniform block exposing resolution, DPI scale, and elapsed time
+- Frame uniform block exposing resolution, content scale, and elapsed time
 - Protected default constructor for `Mesh` subclasses
 - `Geometry::ApplyTransform` for baking a transform into vertex data
 
 ### Changed
 
-- `Renderer::SetViewport` now takes the DPI scale
+- `Renderer::SetViewport` now takes the content scale
 
 ### Fixed
 

@@ -28,8 +28,8 @@ auto Renderer::Clear(RenderTarget* target) -> void {
     impl_->Clear(target);
 }
 
-auto Renderer::SetViewport(int x, int y, int width, int height, Vector2 scale) -> void {
-    impl_->SetViewport(x, y, width, height, scale);
+auto Renderer::SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void {
+    impl_->SetViewport(x, y, width, height, content_scale);
 }
 
 auto Renderer::SetClearColor(const Color& color) -> void {

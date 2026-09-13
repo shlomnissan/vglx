@@ -42,7 +42,7 @@ auto run_example(ExampleScene* scene, vglx::Camera* camera, const ExampleSetting
             0, 0,
             params.framebuffer_width,
             params.framebuffer_height,
-            params.scale
+            params.content_scale
         );
         camera->Resize(params.window_width, params.window_height);
     });
