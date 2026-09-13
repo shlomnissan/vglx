@@ -70,7 +70,6 @@ enum class Uniform {
     PrefilteredMaxLod,
     ReceiveShadow,
     Reflectivity,
-    Resolution,
     Rotation,
     RoughnessMap,
     ShadowMaps2D,
@@ -118,7 +117,6 @@ constexpr auto get_uniform_loc(std::string_view str) {
     if (str == "u_PrefilteredMaxLod") return static_cast<int>(PrefilteredMaxLod);
     if (str == "u_Reflectivity") return static_cast<int>(Reflectivity);
     if (str == "u_ReceiveShadow") return static_cast<int>(ReceiveShadow);
-    if (str == "u_Resolution") return static_cast<int>(Resolution);
     if (str == "u_Rotation") return static_cast<int>(Rotation);
     if (str == "u_RoughnessMap") return static_cast<int>(RoughnessMap);
     if (str == "u_ShadowMaps2D") return static_cast<int>(ShadowMaps2D);

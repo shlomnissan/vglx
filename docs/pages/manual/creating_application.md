@@ -215,7 +215,8 @@ We have a window, a renderer, a camera, and a scene. What we don’t have yet is
 window.OnResize([&](const ResizeParameters& params) {
     renderer.SetViewport(0, 0,
         params.framebuffer_width,
-        params.framebuffer_height
+        params.framebuffer_height,
+        params.scale
     );
     camera->Resize(params.window_width, params.window_height);
 });
@@ -333,7 +334,8 @@ auto main() -> int {
     window.OnResize([&](const ResizeParameters& params) {
         renderer.SetViewport(0, 0,
             params.framebuffer_width,
-            params.framebuffer_height
+            params.framebuffer_height,
+            params.scale
         );
         camera->Resize(params.window_width, params.window_height);
     });

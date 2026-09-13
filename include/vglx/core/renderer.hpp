@@ -11,6 +11,7 @@
 
 #include "vglx/cameras/camera.hpp"
 #include "vglx/math/color.hpp"
+#include "vglx/math/vector2.hpp"
 #include "vglx/scene/scene.hpp"
 
 #include <cstddef>
@@ -169,8 +170,9 @@ public:
      * @param y Bottom pixel of the viewport.
      * @param width Viewport width in pixels.
      * @param height Viewport height in pixels.
+     * @param scale DPI scale factor per axis.
      */
-    auto SetViewport(int x, int y, int width, int height) -> void;
+    auto SetViewport(int x, int y, int width, int height, Vector2 scale) -> void;
 
     /**
      * @brief Sets the clear color for subsequent frames.

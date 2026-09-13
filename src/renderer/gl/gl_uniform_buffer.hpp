@@ -17,6 +17,7 @@
 namespace vglx {
 
 enum class UniformBuffer {
+    Frame,
     Camera,
     Lights,
     KnownUniformBuffersLength
@@ -24,6 +25,7 @@ enum class UniformBuffer {
 
 constexpr auto get_uniform_block_loc(std::string_view str) {
     using enum UniformBuffer;
+    if (str == "ub_Frame") return static_cast<int>(Frame);
     if (str == "ub_Camera") return static_cast<int>(Camera);
     if (str == "ub_Lights") return static_cast<int>(Lights);
     return -1;

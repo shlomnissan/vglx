@@ -15,6 +15,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "vglx/math/vector2.hpp"
+
 namespace vglx {
 
 class Window::Impl {
@@ -26,6 +28,8 @@ public:
     int framebuffer_height {0};
     int window_width {0};
     int window_height {0};
+
+    Vector2 content_scale {0.0f};
 
     bool did_resize {false};
 

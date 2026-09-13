@@ -12,6 +12,7 @@
 #include "vglx/math/matrix4.hpp"
 #include "vglx/math/vector2.hpp"
 #include "vglx/scene/renderable.hpp"
+#include "vglx/utilities/timer.hpp"
 
 #include "renderer/gl/gl_background_pass.hpp"
 #include "renderer/gl/gl_binding_state.hpp"
@@ -37,9 +38,15 @@ namespace vglx {
 class RenderLists;
 class RenderTarget;
 
+struct alignas(16) FrameUniforms {
+    Vector2 resolution {0.0f};
+    Vector2 scale {1.0f};
+    float time {0.0f};
+};
+
 struct alignas(16) CameraUniforms {
-    Matrix4 projection;
-    Matrix4 view;
+    Matrix4 projection {1.0f};
+    Matrix4 view {1.0f};
 };
 
 class Renderer::Impl {
@@ -58,7 +65,7 @@ public:
 
     auto Clear(RenderTarget* target = nullptr) -> void;
 
-    auto SetViewport(int x, int y, int width, int height) -> void;
+    auto SetViewport(int x, int y, int width, int height, Vector2 scale) -> void;
 
     auto SetClearColor(const Color& color) -> void;
 
@@ -86,7 +93,6 @@ public:
 
 private:
     GLBackgroundPass background_pass_;
-    CameraUniforms camera_ {};
     GLEnvironment environment_;
     GLLights lights_;
     GLPresentPass present_pass_;
@@ -99,8 +105,11 @@ private:
     GLBuffers buffers_;
     GLBindingState binding_state_ {buffers_};
 
-    Vector2 resolution_ {0.0f, 0.0f};
+    FrameUniforms frame_ {};
+    GLUniformBuffer frame_uniforms_ {"ub_Frame", sizeof(FrameUniforms)};
+    Timer timer_ {true};
 
+    CameraUniforms camera_ {};
     GLUniformBuffer camera_uniforms_ {"ub_Camera", sizeof(CameraUniforms)};
 
     int viewport_width_ {0};
@@ -139,6 +148,8 @@ private:
         Camera* camera,
         Scene* scene
     ) -> void;
+
+    auto UpdateFrameUniforms() -> void;
 
     auto UpdateCameraUniforms(Camera* camera) -> void;
 };

@@ -41,7 +41,8 @@ auto run_example(ExampleScene* scene, vglx::Camera* camera, const ExampleSetting
         renderer.SetViewport(
             0, 0,
             params.framebuffer_width,
-            params.framebuffer_height
+            params.framebuffer_height,
+            params.scale
         );
         camera->Resize(params.window_width, params.window_height);
     });

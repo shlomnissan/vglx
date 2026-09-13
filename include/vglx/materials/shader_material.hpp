@@ -44,13 +44,13 @@ namespace vglx {
  *   .vertex_shader = vert_source,
  *   .fragment_shader = frag_source,
  *   .uniforms = {
- *     {"u_Time", 0.0f},
- *     {"u_Resolution", Vector2::Zero()}
+ *     {"u_Intensity", 1.0f},
+ *     {"u_Offset", Vector2::Zero()}
  *   }
  * });
  *
- * // Update a uniform each frame
- * material->SetUniform("u_Time", timer.GetElapsedSeconds());
+ * // Update a uniform after creation
+ * material->SetUniform("u_Intensity", 0.5f);
  *
  * my_scene->Add(vglx::Mesh::Create(geometry, material));
  * @endcode

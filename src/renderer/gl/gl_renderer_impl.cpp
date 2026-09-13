@@ -219,7 +219,6 @@ auto Renderer::Impl::SetUniforms(
     if (attrs->alpha_test) {
         program->SetUniform(Uniform::AlphaTest, &material->alpha_test);
     }
-    program->SetUniform(Uniform::Resolution, &resolution_);
 
     static const auto kIdentity = Matrix3::Identity();
     program->SetUniform(Uniform::TextureTransform, &kIdentity);
@@ -438,6 +437,10 @@ auto Renderer::Impl::SetUniforms(
             bind_texture(Uniform::TextureMap, m->texture_map);
         }
     }
+}
+
+auto Renderer::Impl::UpdateFrameUniforms() -> void {
+    frame_uniforms_.UploadIfNeeded(&frame_, sizeof(frame_));
 }
 
 auto Renderer::Impl::UpdateCameraUniforms(Camera* camera) -> void {
@@ -692,9 +695,11 @@ auto Renderer::Impl::RenderShadowMaps(Scene* scene, Camera* camera) -> void {
 }
 
 auto Renderer::Impl::Render(Scene* scene, Camera* camera, RenderTarget* target) -> void {
-    resolution_ = target != nullptr
+    frame_.resolution = target != nullptr
         ? Vector2 { static_cast<float>(target->width), static_cast<float>(target->height) }
         : Vector2 { static_cast<float>(viewport_width_), static_cast<float>(viewport_height_) };
+
+    frame_.time = static_cast<float>(timer_.GetElapsedSeconds());
 
     if (scene->environment) {
         if (const auto texture_id = textures_.Bind(scene->environment, 0); texture_id != 0u) {
@@ -721,6 +726,8 @@ auto Renderer::Impl::Render(Scene* scene, Camera* camera, RenderTarget* target) 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
+    UpdateFrameUniforms();
+
     UpdateCameraUniforms(camera);
 
     ProcessLights(camera);
@@ -746,11 +753,12 @@ auto Renderer::Impl::Clear(RenderTarget* target) -> void {
     framebuffers_.Reset();
 }
 
-auto Renderer::Impl::SetViewport(int x, int y, int width, int height) -> void {
+auto Renderer::Impl::SetViewport(int x, int y, int width, int height, Vector2 scale) -> void {
     viewport_width_ = width;
     viewport_height_ = height;
     state_.SetViewport(x, y, width, height);
     scene_buffer_.ResizeViewport(width, height);
+    frame_.scale = scale;
 }
 
 auto Renderer::Impl::SetClearColor(const Color& color) -> void {

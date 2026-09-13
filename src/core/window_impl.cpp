@@ -36,6 +36,7 @@ auto glfw_mouse_mods = 0;
 auto glfw_keyboard_map(int key) -> Key;
 auto glfw_framebuffer_size_callback(GLFWwindow*, int w, int h) -> void;
 auto glfw_window_size_callback(GLFWwindow*, int w, int h) -> void;
+auto glfw_window_content_scale_callback(GLFWwindow*, float x, float y) -> void;
 
 }
 
@@ -80,6 +81,7 @@ auto Window::Impl::Initialize() -> std::expected<void, std::string> {
     glfwSetWindowUserPointer(window_, this);
     glfwGetFramebufferSize(window_, &framebuffer_width, &framebuffer_height);
     glfwGetWindowSize(window_, &window_width, &window_height);
+    glfwGetWindowContentScale(window_, &content_scale.x, &content_scale.y);
 
     // Report the initial size through the resize callback.
     did_resize = true;
@@ -90,6 +92,7 @@ auto Window::Impl::Initialize() -> std::expected<void, std::string> {
     glfwSetScrollCallback(window_, glfw_scroll_callback);
     glfwSetFramebufferSizeCallback(window_, glfw_framebuffer_size_callback);
     glfwSetWindowSizeCallback(window_, glfw_window_size_callback);
+    glfwSetWindowContentScaleCallback(window_, glfw_window_content_scale_callback);
 
 #ifdef VGLX_USE_IMGUI
     imgui_initialize(window_);
@@ -106,7 +109,8 @@ auto Window::Impl::PollEvents() -> void {
                 framebuffer_width,
                 framebuffer_height,
                 window_width,
-                window_height
+                window_height,
+                content_scale
             });
             did_resize = false;
         }
@@ -283,13 +287,21 @@ auto glfw_mouse_mod_map(int mods) -> int {
 
 auto glfw_framebuffer_size_callback(GLFWwindow* window, int w, int h) -> void {
     auto in = static_cast<Window::Impl*>(glfwGetWindowUserPointer(window));
-    glfwGetFramebufferSize(window, &in->framebuffer_width, &in->framebuffer_height);
+    in->framebuffer_width = w;
+    in->framebuffer_height = h;
     in->did_resize = true;
 }
 
 auto glfw_window_size_callback(GLFWwindow* window, int w, int h) -> void {
     auto in = static_cast<Window::Impl*>(glfwGetWindowUserPointer(window));
-    glfwGetWindowSize(window, &in->window_width, &in->window_height);
+    in->window_width = w;
+    in->window_height = h;
+    in->did_resize = true;
+}
+
+auto glfw_window_content_scale_callback(GLFWwindow* window, float x, float y) -> void {
+    auto in = static_cast<Window::Impl*>(glfwGetWindowUserPointer(window));
+    in->content_scale = {x, y};
     in->did_resize = true;
 }
 

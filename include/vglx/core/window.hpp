@@ -15,6 +15,8 @@
 #include <string>
 #include <string_view>
 
+#include "vglx/math/vector2.hpp"
+
 namespace vglx {
 
 /**
@@ -27,6 +29,7 @@ struct ResizeParameters {
     int framebuffer_height; ///< Framebuffer height in physical pixels.
     int window_width; ///< Logical window width in screen coordinates.
     int window_height; ///< Logical window height in screen coordinates.
+    Vector2 scale; ///< DPI scale factor per axis.
 };
 
 /**
