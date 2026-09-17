@@ -23,9 +23,6 @@ auto handle_node_updates(Node* node, float delta) -> void {
 auto handle_input_event(Node* node, Event* event) -> void {
     using enum Event::Type;
 
-    // Events are propagated from the bottom of the scene graph to the top.
-    // This allows nodes at the bottom of the graph to mark events as handled
-    // and prevent them from being processed by parent nodes.
     for (const auto& child : node->GetChildren()) {
         if (event->handled) return;
         handle_input_event(child.get(), event);

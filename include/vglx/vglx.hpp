@@ -8,6 +8,7 @@
 #pragma once
 
 #include "vglx/cameras.hpp"
+#include "vglx/canvas.hpp"
 #include "vglx/core.hpp"
 #include "vglx/events.hpp"
 #include "vglx/geometries.hpp"
