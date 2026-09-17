@@ -236,23 +236,36 @@ public:
      */
     [[nodiscard]] constexpr auto Get() -> Matrix4 {
         if (touched) {
-            const auto r = rotation.GetMatrix();
-
-            transform_ = {
-                scale.x * r(0, 0), scale.y * r(0, 1), scale.z * r(0, 2), position.x,
-                scale.x * r(1, 0), scale.y * r(1, 1), scale.z * r(1, 2), position.y,
-                scale.x * r(2, 0), scale.y * r(2, 1), scale.z * r(2, 2), position.z,
-                0.0f, 0.0f, 0.0f, 1.0f
-            };
-
             touched = false;
+            transform_ = ComputeMatrix();
         }
         return transform_;
+    }
+
+    /**
+     * @brief Returns the 4×4 transform matrix without updating the cache.
+     *
+     * Computes the matrix on the fly if any component has changed since the
+     * last update, otherwise returns the cached @ref Matrix4. The @ref touched
+     * flag is not cleared, so a later non-const call still refreshes the cache.
+     */
+    [[nodiscard]] constexpr auto Get() const -> Matrix4 {
+        return touched ? ComputeMatrix() : transform_;
     }
 
 private:
     /// @cond INTERNAL
     Matrix4 transform_ {1.0f};
+
+    constexpr auto ComputeMatrix() const -> Matrix4 {
+        const auto r = rotation.GetMatrix();
+        return Matrix4 {
+            scale.x * r(0, 0), scale.y * r(0, 1), scale.z * r(0, 2), position.x,
+            scale.x * r(1, 0), scale.y * r(1, 1), scale.z * r(1, 2), position.y,
+            scale.x * r(2, 0), scale.y * r(2, 1), scale.z * r(2, 2), position.z,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+    }
 
     constexpr auto Decompose(const Matrix4& mat) -> void {
         const auto axis_x = Vector3 {mat(0, 0), mat(1, 0), mat(2, 0)};

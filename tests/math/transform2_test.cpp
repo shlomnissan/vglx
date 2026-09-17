@@ -292,3 +292,31 @@ TEST(Transform2, TranslateAfterRotation) {
 }
 
 #pragma endregion
+
+#pragma region Const Access
+
+TEST(Transform2, ConstGetPreservesTouched) {
+    auto t1 = vglx::Transform2 {};
+    t1.SetPosition({2.0f, 1.0f});
+
+    const auto& c1 = t1;
+
+    EXPECT_MAT3_EQ(c1.Get(), {
+        1.0f, 0.0f, 2.0f,
+        0.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 1.0f
+    });
+    EXPECT_TRUE(t1.touched);
+
+    constexpr auto t2 = []() {
+        auto t = vglx::Transform2 {};
+        t.SetPosition({2.0f, 1.0f});
+        const auto& c = t;
+        (void)c.Get();
+        return t;
+    }();
+
+    static_assert(t2.touched);
+}
+
+#pragma endregion

@@ -141,22 +141,37 @@ public:
     [[nodiscard]] constexpr auto Get() -> Matrix3 {
         if (touched) {
             touched = false;
-            const float rc = math::Cos(rotation);
-            const float rs = math::Sin(rotation);
-            const float tx = -scale.x * (rc * center.x - rs * center.y) + center.x + position.x;
-            const float ty = -scale.y * (rs * center.x + rc * center.y) + center.y + position.y;
-            transform_ = {
-                scale.x * rc, -scale.x * rs, tx,
-                scale.y * rs,  scale.y * rc, ty,
-                0.0f, 0.0f, 1.0f
-            };
+            transform_ = ComputeMatrix();
         }
         return transform_;
+    }
+
+    /**
+     * @brief Returns the 3×3 transform matrix without updating the cache.
+     *
+     * Computes the matrix on the fly if any component has changed since the
+     * last update, otherwise returns the cached @ref Matrix3. The @ref touched
+     * flag is not cleared, so a later non-const call still refreshes the cache.
+     */
+    [[nodiscard]] constexpr auto Get() const -> Matrix3 {
+        return touched ? ComputeMatrix() : transform_;
     }
 
 private:
     /// @cond INTERNAL
     Matrix3 transform_ {1.0f};
+
+    constexpr auto ComputeMatrix() const -> Matrix3 {
+        const float rc = math::Cos(rotation);
+        const float rs = math::Sin(rotation);
+        const float tx = -scale.x * (rc * center.x - rs * center.y) + center.x + position.x;
+        const float ty = -scale.y * (rs * center.x + rc * center.y) + center.y + position.y;
+        return Matrix3 {
+            scale.x * rc, -scale.x * rs, tx,
+            scale.y * rs,  scale.y * rc, ty,
+            0.0f, 0.0f, 1.0f
+        };
+    }
     /// @endcond
 };
 

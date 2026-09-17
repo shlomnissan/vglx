@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+### Added
+
+- `const Get()` overloads on transforms that compute the matrix without updating the cache
+
 ## [0.2.0] - 2026-09-16
 
 ### Added
