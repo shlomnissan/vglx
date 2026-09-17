@@ -60,7 +60,7 @@ auto Renderable::CanRender() const -> bool {
 
 auto Renderable::InFrustum(const Frustum& frustum) -> bool {
     auto bounding_sphere = BoundingSphere();
-    bounding_sphere.ApplyTransform(GetWorldTransform());
+    bounding_sphere.ApplyTransform(GetCachedWorldTransform());
     return frustum.IntersectsWithSphere(bounding_sphere);
 }
 

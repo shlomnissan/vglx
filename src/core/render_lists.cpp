@@ -26,7 +26,8 @@ auto RenderLists::ProcessScene(Scene* scene, Camera* camera, bool sort) -> void 
     const auto c = camera->GetWorldPosition();
     const auto f = camera->Forward();
     const auto depth = [&](auto* renderable) {
-        return Dot(renderable->GetWorldPosition() - c, f);
+        const auto& t = renderable->GetCachedWorldTransform()[3];
+        return Dot(Vector3 {t.x, t.y, t.z} - c, f);
     };
 
     if (sort) {

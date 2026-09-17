@@ -15,6 +15,7 @@
 
 #include "utilities/assert.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -83,15 +84,21 @@ struct DirectionalLight::Impl {
     }
 
     auto RemoveDebugMesh(DirectionalLight* self) -> void {
-        if (line != nullptr) {
-            self->Remove(line);
-            line = nullptr;
-        }
+        const auto is_child = [self](const Node* node) {
+            return std::ranges::any_of(self->GetChildren(), [node](const auto& child) {
+                return child.get() == node;
+            });
+        };
 
-        if (plane != nullptr) {
-            self->Remove(plane);
-            plane = nullptr;
+        if (is_child(line)) {
+            self->Remove(line);
         }
+        line = nullptr;
+
+        if (is_child(plane)) {
+            self->Remove(plane);
+        }
+        plane = nullptr;
 
         material.reset();
     }

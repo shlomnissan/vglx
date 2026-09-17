@@ -80,7 +80,7 @@ public:
     /**
      * @brief Camera right axis in world space.
      */
-    [[nodiscard]] auto Right() -> Vector3 {
+    [[nodiscard]] auto Right() const -> Vector3 {
         const auto& mat = GetWorldTransform();
         return Vector3 { mat[0][0], mat[0][1], mat[0][2] };
     }
@@ -88,7 +88,7 @@ public:
     /**
      * @brief Camera up axis in world space.
      */
-    [[nodiscard]] auto Up() -> Vector3 {
+    [[nodiscard]] auto Up() const -> Vector3 {
         const auto& mat = GetWorldTransform();
         return Vector3 { mat[1][0], mat[1][1], mat[1][2] };
     }
@@ -96,7 +96,7 @@ public:
     /**
      * @brief Camera forward axis in world space.
      */
-    [[nodiscard]] auto Forward() -> Vector3 {
+    [[nodiscard]] auto Forward() const -> Vector3 {
         const auto& mat = GetWorldTransform();
         return Vector3 { -mat[2][0], -mat[2][1], -mat[2][2] };
     }

@@ -11,6 +11,8 @@
 #include "vglx/primitives/sphere_geometry.hpp"
 #include "vglx/scene/mesh.hpp"
 
+#include <algorithm>
+
 namespace vglx {
 
 static constexpr auto debug_mesh_size = 0.2f;
@@ -44,10 +46,14 @@ struct PointLight::Impl {
     }
 
     auto RemoveDebugMesh(PointLight* self) -> void {
-        if (sphere != nullptr) {
+        const auto is_child = std::ranges::any_of(self->GetChildren(), [this](const auto& child) {
+            return child.get() == sphere;
+        });
+
+        if (is_child) {
             self->Remove(sphere);
-            sphere = nullptr;
         }
+        sphere = nullptr;
 
         material.reset();
     }

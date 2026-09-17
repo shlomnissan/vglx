@@ -16,6 +16,7 @@
 
 #include "utilities/assert.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <utility>
@@ -89,10 +90,14 @@ struct SpotLight::Impl {
     }
 
     auto RemoveDebugMesh(SpotLight* self) -> void {
-        if (cone != nullptr) {
+        const auto is_child = std::ranges::any_of(self->GetChildren(), [this](const auto& child) {
+            return child.get() == cone;
+        });
+
+        if (is_child) {
             self->Remove(cone);
-            cone = nullptr;
         }
+        cone = nullptr;
 
         material.reset();
     }

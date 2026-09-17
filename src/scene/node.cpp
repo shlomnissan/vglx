@@ -10,56 +10,48 @@
 #include "vglx/scene/scene.hpp"
 
 #include "utilities/assert.hpp"
-#include "utilities/logger.hpp"
 
 #include <algorithm>
-#include <queue>
+#include <vector>
 
 namespace vglx {
 
 struct Node::Impl {
     std::vector<std::unique_ptr<Node>> children;
-
     Scene* scene {nullptr};
-
     Node* parent {nullptr};
-
     Matrix4 world_transform {1.0f};
-
-    bool world_transform_touched {false};
-
-    bool attached {false};
 };
 
-Node::Node() : impl_(std::make_unique<Impl>()) {};
+Node::Node() : impl_(std::make_unique<Impl>()) {}
 
 auto Node::AddImpl(std::unique_ptr<Node> node) -> Node* {
-    if (node == nullptr) {
-        Logger::Log(LogLevel::Error, "Attempting to add invalid node");
-        return nullptr;
-    }
-
-    VGLX_ASSERT(
-        node->impl_->parent == nullptr,
-        "Attempting to add a node already owned by another parent"
-    );
-
     auto raw = node.get();
 
     VGLX_ASSERT(
+        raw != nullptr,
+        "Failed to add node: node is set to nullptr"
+    );
+
+    VGLX_ASSERT(
         raw != this,
-        "Cannot add node as a child of itself"
+        "Failed to add node: node cannot be added to itself"
+    );
+
+    VGLX_ASSERT(
+        raw->impl_->parent == nullptr,
+        "Failed to add node: node already has a parent"
     );
 
     VGLX_ASSERT(
         !raw->IsChild(this),
-        "Cannot add an ancestor as a child (cycle detected)"
+        "Failed to add node: node is an ancestor"
     );
 
-    raw->impl_->parent = this;
     impl_->children.emplace_back(std::move(node));
 
-    if (impl_->attached && impl_->scene) {
+    raw->impl_->parent = this;
+    if (impl_->scene) {
         raw->AttachSubtree(impl_->scene);
     }
 
@@ -67,39 +59,43 @@ auto Node::AddImpl(std::unique_ptr<Node> node) -> Node* {
 }
 
 auto Node::DetachImpl(Node* node) -> std::unique_ptr<Node> {
-    if (node == nullptr) {
-        Logger::Log(
-            LogLevel::Error,
-            "Attempting to detach invalid node"
-        );
-        return nullptr;
-    }
+    VGLX_ASSERT(
+        node != nullptr,
+        "Failed to detach node: node is set to nullptr"
+    );
 
     auto it = std::ranges::find_if(impl_->children, [node](const auto& child){
         return child.get() == node;
     });
 
-    if (it == impl_->children.end()) {
-        Logger::Log(
-            LogLevel::Warning,
-            "Attempting to detach non-child node"
-        );
-        return nullptr;
-    }
-
     VGLX_ASSERT(
-        node->impl_->parent == this,
-        "Child list contains node with mismatched parent pointer"
+        it != impl_->children.end(),
+        "Failed to detach node: node is not a child"
     );
 
-    auto out_node = std::move(*it);
+    auto out = std::move(*it);
     impl_->children.erase(it);
 
-    out_node->DetachSubtree();
-    out_node->impl_->parent = nullptr;
-    out_node->transform.touched = true;
+    out->DetachSubtree();
+    out->impl_->parent = nullptr;
+    out->transform.touched = true;
 
-    return out_node;
+    return out;
+}
+
+auto Node::AttachSubtree(Scene* scene) -> void {
+    if (impl_->scene) return;
+    impl_->scene = scene;
+    for (const auto& child : impl_->children) {
+        child->AttachSubtree(scene);
+    }
+}
+
+auto Node::DetachSubtree() -> void {
+    if (!impl_->scene) return;
+    impl_->scene = nullptr;
+    transform.touched = true;
+    for (auto& child : impl_->children) child->DetachSubtree();
 }
 
 auto Node::Remove(Node* node) -> void {
@@ -115,6 +111,37 @@ auto Node::RemoveAllChildren() -> void {
     impl_->children.clear();
 }
 
+auto Node::UpdateTransformHierarchyImpl(bool force_update) -> void {
+    const auto update = transform_auto_update && (transform.touched || force_update);
+    if (update) {
+        impl_->world_transform = impl_->parent == nullptr
+            ? transform.Get()
+            : impl_->parent->impl_->world_transform * transform.Get();
+    }
+
+    for (const auto& child : impl_->children) {
+        child->UpdateTransformHierarchyImpl(update);
+    }
+}
+
+auto Node::GetWorldTransform() const -> Matrix4 {
+    if (!transform_auto_update) {
+        return impl_->world_transform;
+    }
+
+    const auto local = transform.Get();
+    return impl_->parent == nullptr ? local : impl_->parent->GetWorldTransform() * local;
+}
+
+auto Node::GetCachedWorldTransform() const -> const Matrix4& {
+    return impl_->world_transform;
+}
+
+auto Node::GetWorldPosition() const -> Vector3 {
+    const auto t = GetWorldTransform()[3];
+    return Vector3 {t.x, t.y, t.z};
+}
+
 auto Node::GetChildren() const -> std::span<const std::unique_ptr<Node>> {
     return impl_->children;
 }
@@ -127,81 +154,15 @@ auto Node::GetChild(std::string_view name) const -> Node* {
 }
 
 auto Node::IsChild(const Node* node) const -> bool {
-    if (node == nullptr) {
-        return false;
+    while (node != nullptr) {
+        node = node->impl_->parent;
+        if (node == this) return true;
     }
-
-    auto to_process = std::queue<Node*> {};
-    for (const auto& child : GetChildren()) {
-        VGLX_ASSERT(child != nullptr, "Null child in children list");
-        to_process.push(child.get());
-    }
-
-    while (!to_process.empty()) {
-        auto len = to_process.size();
-        for (size_t i = 0; i < len; ++i) {
-            const auto current = to_process.front();
-            to_process.pop();
-            if (current == node) return true;
-            for (const auto& child : current->GetChildren()) {
-                VGLX_ASSERT(child != nullptr, "Null child in children list");
-                to_process.push(child.get());
-            }
-        }
-    }
-
     return false;
 }
 
 auto Node::GetParent() const -> const Node* {
     return impl_->parent;
-}
-
-auto Node::UpdateTransformHierarchy() -> void {
-    if (transform_auto_update && ShouldUpdateWorldTransform()) {
-        impl_->world_transform = impl_->parent == nullptr
-            ? transform.Get()
-            : impl_->parent->impl_->world_transform * transform.Get();
-        transform.touched = false;
-        impl_->world_transform_touched = true;
-    }
-
-    for (const auto& child : GetChildren()) {
-        VGLX_ASSERT(child != nullptr, "Null child in children list");
-        child->UpdateTransformHierarchy();
-    }
-
-    impl_->world_transform_touched = false;
-}
-
-auto Node::UpdateWorldTransform() -> void {
-    if (impl_->parent != nullptr) {
-        impl_->parent->UpdateWorldTransform();
-    }
-
-    if (ShouldUpdateWorldTransform()) {
-        impl_->world_transform = impl_->parent == nullptr
-            ? transform.Get()
-            : impl_->parent->impl_->world_transform * transform.Get();
-        transform.touched = false;
-    }
-}
-
-auto Node::ShouldUpdateWorldTransform() const -> bool {
-    return transform.touched || (impl_->parent && impl_->parent->impl_->world_transform_touched);
-}
-
-auto Node::GetWorldPosition() -> Vector3 {
-    UpdateWorldTransform();
-    auto& t = impl_->world_transform[3];
-    return Vector3(t.x, t.y, t.z);
-}
-
-auto Node::GetWorldTransform() -> Matrix4 {
-    if (transform_auto_update) {
-        UpdateTransformHierarchy();
-    }
-    return impl_->world_transform;
 }
 
 auto Node::GetScene() const -> const Scene* {
@@ -210,24 +171,6 @@ auto Node::GetScene() const -> const Scene* {
 
 auto Node::LookAt(const Vector3& target) -> void {
     transform.LookAt(GetWorldPosition(), target, up);
-}
-
-auto Node::AttachSubtree(Scene* scene) -> void {
-    if (impl_->attached) return;
-    impl_->attached = true;
-    impl_->scene = scene;
-    for (const auto& child : impl_->children) {
-        VGLX_ASSERT(child != nullptr, "Null child in children list");
-        child->AttachSubtree(scene);
-    }
-}
-
-auto Node::DetachSubtree() -> void {
-    if (!impl_->attached) return;
-    impl_->attached = false;
-    impl_->scene = nullptr;
-    transform.touched = true;
-    for (auto& child : impl_->children) child->DetachSubtree();
 }
 
 Node::~Node() = default;

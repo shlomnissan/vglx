@@ -10,10 +10,7 @@
 namespace vglx {
 
 auto Camera::UpdateViewMatrix() -> void {
-    if (ShouldUpdateWorldTransform()) {
-        UpdateWorldTransform();
-        this->view_matrix = Inverse(GetWorldTransform());
-    }
+    this->view_matrix = Inverse(GetWorldTransform());
 }
 
 auto Camera::GetFrustum() -> Frustum {

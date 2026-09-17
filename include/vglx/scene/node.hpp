@@ -169,27 +169,47 @@ public:
     /**
      * @brief Recursively updates world transforms for this node and its descendants.
      *
-     * If @ref transform_auto_update is enabled and the node’s world transform is
-     * dirty, it is recomputed from the parent’s world transform (or from the local
-     * transform if this node is a root). The world transform is then marked clean
-     * for this update cycle. The method then recurses into each child.
+     * If @ref transform_auto_update is enabled and the node’s local transform is
+     * dirty, or an ancestor was recomputed during this pass, the world transform
+     * is recomputed from the parent’s world transform (or from the local transform
+     * if this node is a root) and the local transform is marked clean. The method
+     * then recurses into each child.
      *
-     * This is the primary mechanism used by the renderer and scene step to update
-     * transform propagation across the entire hierarchy.
+     * This is the primary mechanism used by the renderer to update transform
+     * propagation across the entire hierarchy once per frame.
      */
-    auto UpdateTransformHierarchy() -> void;
+    auto UpdateTransformHierarchy() -> void {
+        UpdateTransformHierarchyImpl(false);
+    }
 
     /**
-     * @brief Ensures this node’s world transform is up to date.
+     * @brief Returns the world transform cached by the last hierarchy update.
      *
-     * If the parent’s world transform may be outdated, the method updates the
-     * parent first. Then, if this node's transform is dirty, the world transform
-     * is recomputed without affecting siblings or children. This method does not
-     * recurse into children, unlike @ref UpdateTransformHierarchy.
-     *
-     * This is typically used when querying world-space properties on a single node.
+     * Reflects the state as of the most recent call to
+     * @ref UpdateTransformHierarchy and may be stale if a transform changed
+     * since. Intended for the renderer, which reads it after the per-frame
+     * update. Use @ref GetWorldTransform for an always-current result.
      */
-    auto UpdateWorldTransform() -> void;
+    [[nodiscard]] auto GetCachedWorldTransform() const -> const Matrix4&;
+
+    /**
+     * @brief Returns the node’s world transform matrix.
+     *
+     * Composes the local transforms along the parent chain without modifying
+     * any cached state, so the result is current regardless of when the
+     * hierarchy was last updated. The cost is proportional to the node’s depth.
+     * If @ref transform_auto_update is disabled, returns the cached world
+     * transform as-is.
+     */
+    [[nodiscard]] auto GetWorldTransform() const -> Matrix4;
+
+    /**
+     * @brief Returns the node’s world-space position.
+     *
+     * Computes the world transform via @ref GetWorldTransform, then extracts
+     * the translation column of the matrix.
+     */
+    [[nodiscard]] auto GetWorldPosition() const -> Vector3;
 
     /**
      * @brief Returns a view of this node’s direct children.
@@ -221,9 +241,8 @@ public:
     /**
      * @brief Checks whether the given node exists anywhere in this node’s subtree.
      *
-     * The search is breadth-first. All descendants are examined.
-     *
-     * @param node Node to test for membership in the subtree.
+     * @param node Node to test for membership in the subtree. Must point to a
+     * live node or be `nullptr`.
      */
     [[nodiscard]] auto IsChild(const Node* node) const -> bool;
 
@@ -235,36 +254,10 @@ public:
     /**
      * @brief Returns the scene that owns this node.
      *
-     * Returns the scene this node is currently attached to, or `nullptr`
+     * Returns the scene this node is currently attached to or `nullptr`
      * if the node is not attached to any scene.
      */
     [[nodiscard]] auto GetScene() const -> const Scene*;
-
-    /**
-     * @brief Returns whether this node’s world transform must be recomputed.
-     *
-     * A world transform is considered dirty if either the local transform has been
-     * modified, or if the parent’s world transform was updated during the current
-     * update cycle.
-     */
-    [[nodiscard]] auto ShouldUpdateWorldTransform() const -> bool;
-
-    /**
-     * @brief Returns the node’s world-space position.
-     *
-     * Ensures the world transform is current via @ref UpdateWorldTransform, then
-     * extracts the translation column of the world matrix.
-     */
-    [[nodiscard]] auto GetWorldPosition() -> Vector3;
-
-    /**
-     * @brief Returns the node’s world transform matrix.
-     *
-     * If transform auto-updates are enabled, calls @ref UpdateTransformHierarchy
-     * to refresh this node and all descendants. Otherwise, returns the cached
-     * world transform as-is.
-     */
-    [[nodiscard]] auto GetWorldTransform() -> Matrix4;
 
     /// @}
 
@@ -336,11 +329,16 @@ private:
     class Impl;
     std::unique_ptr<Impl> impl_;
 
-    [[nodiscard]] auto AddImpl(std::unique_ptr<Node> node) -> Node*;
-    [[nodiscard]] auto DetachImpl(Node* node) -> std::unique_ptr<Node>;
-
     friend class Scene;
+
+    auto AddImpl(std::unique_ptr<Node> node) -> Node*;
+
+    auto DetachImpl(Node* node) -> std::unique_ptr<Node>;
+
+    auto UpdateTransformHierarchyImpl(bool force_update) -> void;
+
     auto AttachSubtree(Scene* scene) -> void;
+
     auto DetachSubtree() -> void;
     /// @endcond
 };

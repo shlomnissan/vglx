@@ -209,7 +209,7 @@ auto Renderer::Impl::SetUniforms(
     Scene* scene
 ) -> void {
     auto material = renderable->GetMaterial().get();
-    auto model = renderable->GetWorldTransform();
+    const auto& model = renderable->GetCachedWorldTransform();
 
     auto next_texture_unit = 0;
 
@@ -575,7 +575,7 @@ auto Renderer::Impl::RenderShadowMaps(Scene* scene, Camera* camera) -> void {
             }
 
             auto is_instanced = renderable->GetNodeType() == Node::Type::InstancedMesh;
-            auto model = renderable->GetWorldTransform();
+            const auto& model = renderable->GetCachedWorldTransform();
 
             using enum Material::Side;
             switch (material->side) {
