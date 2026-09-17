@@ -9,6 +9,7 @@
 
 #include "vglx_export.h"
 
+#include "vglx/canvas/canvas.hpp"
 #include "vglx/scene/fog.hpp"
 #include "vglx/scene/node.hpp"
 #include "vglx/textures/texture.hpp"
@@ -22,8 +23,9 @@ namespace vglx {
  * @brief Root node of a renderable scene graph.
  *
  * Scene is the top-level container for all nodes that participate in
- * rendering and updates. It owns the scene graph hierarchy and optional
- * global fog settings. Construct a scene directly with @ref Scene::Create
+ * rendering and updates. It owns the scene graph hierarchy, a @ref canvas
+ * for 2D content, and optional global fog settings. Construct a scene
+ * directly with @ref Scene::Create
  * or by subclassing, attach nodes to it, and call @ref Advance once per
  * frame to drive its updates.
  *
@@ -60,6 +62,16 @@ public:
     float environment_intensity {1.0f};
 
     /**
+     * @brief Canvas for 2D content drawn on top of the scene.
+     *
+     * Add @ref Node2D "2D nodes" here to build a HUD. The canvas advances
+     * with the scene and receives input events before the scene graph so a
+     * canvas node can consume an event before any 3D node sees it. Call
+     * @ref Canvas::Resize whenever the window size changes.
+     */
+    Canvas canvas;
+
+    /**
      * @brief Constructs a scene object.
      */
     Scene();
@@ -76,7 +88,8 @@ public:
      *
      * Propagates per-frame updates through the scene graph, calling
      * @ref Node::OnUpdate "OnUpdate" on the scene and all attached nodes in
-     * depth-first order. Call this once per frame from your main loop.
+     * depth-first order, then advances the @ref canvas. Call this once per
+     * frame from your main loop.
      *
      * @param delta Elapsed time in seconds since the last frame.
      */

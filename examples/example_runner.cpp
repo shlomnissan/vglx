@@ -45,6 +45,7 @@ auto run_example(ExampleScene* scene, vglx::Camera* camera, const ExampleSetting
             params.content_scale
         );
         camera->Resize(params.window_width, params.window_height);
+        scene->canvas.Resize(params.window_width, params.window_height);
     });
 
     auto timer = vglx::FrameTimer {true};

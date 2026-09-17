@@ -50,9 +50,16 @@ Scene::Scene() : impl_(std::make_unique<Impl>()) {
         auto type = event->GetType();
 
         if (type == Keyboard || type == Mouse || type == Gamepad) {
+            canvas.HandleEvent(event);
+
+            if (event->handled) {
+                return;
+            }
+
             if (type == Keyboard) OnKeyboardEvent(static_cast<KeyboardEvent*>(event));
             if (type == Mouse) OnMouseEvent(static_cast<MouseEvent*>(event));
             if (type == Gamepad) OnGamepadEvent(static_cast<GamepadEvent*>(event));
+
             for (const auto& child : GetChildren()) {
                 handle_input_event(child.get(), event);
             }
@@ -68,9 +75,10 @@ Scene::Scene() : impl_(std::make_unique<Impl>()) {
 
 auto Scene::Advance(float delta) -> void {
     OnUpdate(delta);
-     for (const auto& child : GetChildren()) {
+    for (const auto& child : GetChildren()) {
         handle_node_updates(child.get(), delta);
     }
+    canvas.Advance(delta);
 }
 
 Scene::~Scene() {
