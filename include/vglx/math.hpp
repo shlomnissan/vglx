@@ -20,6 +20,7 @@
 #include "vglx/math/matrix3.hpp"
 #include "vglx/math/matrix4.hpp"
 #include "vglx/math/plane.hpp"
+#include "vglx/math/rect.hpp"
 #include "vglx/math/sphere.hpp"
 #include "vglx/math/spherical.hpp"
 #include "vglx/math/transform2.hpp"
