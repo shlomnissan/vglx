@@ -65,7 +65,7 @@ public:
      *
      * Defines which point of the quad is placed at the node's position.
      * Because that point sits at the origin it also acts as the pivot
-     * for rotation and scale unless @ref Transform2::center is set.
+     * for rotation and scale unless @ref Transform2::pivot is set.
      *
      * - `(0.0, 0.0)` top-left corner of the sprite (default).
      * - `(0.5, 0.5)` center of the sprite.

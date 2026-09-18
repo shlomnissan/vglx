@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - `const Get()` overloads on transforms that compute the matrix without updating the cache
 
+### Changed
+
+- Renamed `Transform2::center` to `pivot` (breaking)
+
 ### Removed
 
 - `Node::UpdateWorldTransform` and `Node::ShouldUpdateWorldTransform` (breaking)

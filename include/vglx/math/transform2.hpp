@@ -14,10 +14,10 @@
 namespace vglx {
 
 /**
- * @brief 2D affine transform with position, rotation, scale, and center.
+ * @brief 2D affine transform with position, rotation, scale, and pivot.
  *
  * Transform2 represents a 2D transform that combines translation, rotation,
- * and non-uniform scaling around an arbitrary center point. It lazily builds
+ * and non-uniform scaling around an arbitrary pivot point. It lazily builds
  * a @ref Matrix3 suitable for use in 2D rendering pipelines and UI
  * layouts.
  *
@@ -34,8 +34,14 @@ public:
     /// @brief Non-uniform scale in 2D.
     Vector2 scale {1.0f, 1.0f};
 
-    /// @brief Pivot point for rotation and scaling.
-    Vector2 center {0.0f, 0.0f};
+    /**
+     * @brief Pivot point for rotation and scaling, in local units.
+     *
+     * For a texture transform the units are texture coordinates, so
+     * `(0.5, 0.5)` is the middle of the texture. For a canvas node the units
+     * are pixels.
+     */
+    Vector2 pivot {0.0f, 0.0f};
 
     /// @brief Rotation angle in radians.
     float rotation {0.0f};
@@ -123,11 +129,11 @@ public:
     /**
      * @brief Sets the pivot point used for rotation and scaling.
      *
-     * @param center New pivot point.
+     * @param pivot New pivot point.
      */
-    constexpr auto SetCenter(const Vector2& center) -> void {
-        if (this->center !=center) {
-            this->center = center;
+    constexpr auto SetPivot(const Vector2& pivot) -> void {
+        if (this->pivot != pivot) {
+            this->pivot = pivot;
             touched = true;
         }
     }
@@ -164,8 +170,8 @@ private:
     constexpr auto ComputeMatrix() const -> Matrix3 {
         const float rc = math::Cos(rotation);
         const float rs = math::Sin(rotation);
-        const float tx = -scale.x * (rc * center.x - rs * center.y) + center.x + position.x;
-        const float ty = -scale.y * (rs * center.x + rc * center.y) + center.y + position.y;
+        const float tx = -scale.x * (rc * pivot.x - rs * pivot.y) + pivot.x + position.x;
+        const float ty = -scale.y * (rs * pivot.x + rc * pivot.y) + pivot.y + position.y;
         return Matrix3 {
             scale.x * rc, -scale.x * rs, tx,
             scale.y * rs,  scale.y * rc, ty,

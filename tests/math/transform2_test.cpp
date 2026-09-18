@@ -84,7 +84,7 @@ TEST(Transform2, SetRotation) {
 
 TEST(Transform2, MultipleTransformations) {
     auto t = vglx::Transform2 {};
-    t.SetCenter({0.5f, 0.5f});
+    t.SetPivot({0.5f, 0.5f});
     t.SetPosition({2.0f, 3.0f});
     t.SetScale({2.0f, 2.0f});
     t.SetRotation(vglx::math::pi_over_2);
@@ -92,7 +92,7 @@ TEST(Transform2, MultipleTransformations) {
     constexpr auto c = vglx::math::Cos(vglx::math::pi_over_2) * 2.0f;
     constexpr auto s = vglx::math::Sin(vglx::math::pi_over_2) * 2.0f;
 
-    EXPECT_VEC2_EQ(t.center, {0.5f, 0.5f});
+    EXPECT_VEC2_EQ(t.pivot,{0.5f, 0.5f});
     EXPECT_VEC2_EQ(t.position, {2.0f, 3.0f});
     EXPECT_VEC2_EQ(t.scale, {2.0f, 2.0f});
     EXPECT_EQ(t.rotation, vglx::math::pi_over_2);
@@ -104,7 +104,7 @@ TEST(Transform2, MultipleTransformations) {
 
     constexpr auto m = []() {
         auto t = vglx::Transform2 {};
-        t.SetCenter({0.5f, 0.5f});
+        t.SetPivot({0.5f, 0.5f});
         t.SetPosition({2.0f, 3.0f});
         t.SetScale({2.0f, 2.0f});
         t.SetRotation(vglx::math::pi_over_2);
@@ -192,7 +192,7 @@ TEST(Transform2, Rotate) {
 
 TEST(Transform2, TransformationsWithOffset) {
     auto t = vglx::Transform2 {};
-    t.SetCenter({0.5, 0.5f});
+    t.SetPivot({0.5, 0.5f});
     t.Translate({2.0f, 3.0f});
     t.Scale({2.0f, 2.0f});
     t.Rotate(vglx::math::pi_over_2);
@@ -200,7 +200,7 @@ TEST(Transform2, TransformationsWithOffset) {
     constexpr auto c = vglx::math::Cos(vglx::math::pi_over_2) * 2.0f;
     constexpr auto s = vglx::math::Sin(vglx::math::pi_over_2) * 2.0f;
 
-    EXPECT_VEC2_EQ(t.center, {0.5f, 0.5f});
+    EXPECT_VEC2_EQ(t.pivot,{0.5f, 0.5f});
     EXPECT_VEC2_EQ(t.position, {2.0f, 3.0f});
     EXPECT_VEC2_EQ(t.scale, {2.0f, 2.0f});
     EXPECT_EQ(t.rotation, vglx::math::pi_over_2);
@@ -212,7 +212,7 @@ TEST(Transform2, TransformationsWithOffset) {
 
     constexpr auto m = []() {
         auto t = vglx::Transform2 {};
-        t.SetCenter({0.5f, 0.5f});
+        t.SetPivot({0.5f, 0.5f});
         t.SetPosition({2.0f, 3.0f});
         t.SetScale({2.0f, 2.0f});
         t.SetRotation(vglx::math::pi_over_2);
