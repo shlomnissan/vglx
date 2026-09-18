@@ -65,8 +65,9 @@ public:
     /**
      * @brief Opacity of this node, where `1.0` is fully opaque.
      *
-     * Multiplied by the opacity of every ancestor at draw time, so fading a
-     * parent fades its whole subtree. Does not affect updates or input.
+     * Multiplied by the opacity of every ancestor at draw time so fading a
+     * parent fades its whole subtree. see @ref GetWorldOpacity. Does not
+     * affect updates or input.
      */
     float opacity {1.0f};
 
@@ -190,6 +191,15 @@ public:
      * the translation column of the matrix.
      */
     [[nodiscard]] auto GetWorldPosition() const -> Vector2;
+
+    /**
+     * @brief Returns the node’s effective opacity.
+     *
+     * Multiplies @ref opacity by the opacity of every ancestor up to the
+     * root. Like @ref GetWorldTransform, the result is computed on demand
+     * and is always current.
+     */
+    [[nodiscard]] auto GetWorldOpacity() const -> float;
 
     /**
      * @brief Removes a direct child node from this node and destroys it.

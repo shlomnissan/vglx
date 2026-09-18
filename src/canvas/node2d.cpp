@@ -139,6 +139,12 @@ auto Node2D::GetWorldPosition() const -> Vector2 {
     return Vector2 {t.x, t.y};
 }
 
+auto Node2D::GetWorldOpacity() const -> float {
+    return impl_->parent == nullptr
+        ? opacity
+        : impl_->parent->GetWorldOpacity() * opacity;
+}
+
 auto Node2D::GetChildren() const -> std::span<const std::unique_ptr<Node2D>> {
     return impl_->children;
 }

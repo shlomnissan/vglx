@@ -269,6 +269,19 @@ TEST(Node2D, WorldPositionWithRotatedParent) {
     EXPECT_VEC2_NEAR(child->GetWorldPosition(), {0.0f, 1.0f}, 0.001f);
 }
 
+TEST(Node2D, WorldOpacityMultipliesAncestors) {
+    auto parent = vglx::Node2D::Create();
+    auto child = parent->Add(vglx::Node2D::Create());
+    auto grandchild = child->Add(vglx::Node2D::Create());
+
+    parent->opacity = 0.5f;
+    child->opacity = 0.5f;
+
+    EXPECT_FLOAT_EQ(parent->GetWorldOpacity(), 0.5f);
+    EXPECT_FLOAT_EQ(child->GetWorldOpacity(), 0.25f);
+    EXPECT_FLOAT_EQ(grandchild->GetWorldOpacity(), 0.25f);
+}
+
 #pragma endregion
 
 #pragma region Canvas Attachment

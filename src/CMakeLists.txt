@@ -8,6 +8,8 @@ set(SOURCE_CODE
     "canvas/canvas.cpp"
     "canvas/node2d.cpp"
     "canvas/sprite.cpp"
+    "core/canvas_render_list.cpp"
+    "core/canvas_render_list.hpp"
     "core/identity.cpp"
     "core/program_attributes.cpp"
     "core/program_attributes.hpp"
