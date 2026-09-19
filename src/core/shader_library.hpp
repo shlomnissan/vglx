@@ -28,6 +28,8 @@ class ShaderLibrary {
 public:
     auto GetShaderSource(const ProgramAttributes& attrs) const -> std::vector<ShaderInfo>;
 
+    auto GetCanvasShaderSource() const -> std::vector<ShaderInfo>;
+
 private:
     auto ProcessShader(const ProgramAttributes& attrs, std::string_view source) const -> std::string;
 

@@ -27,6 +27,8 @@
 #include "shaders/headers/unlit_material_vert.h"
 #include "shaders/include/headers/fog_incl_glsl.h"
 #include "shaders/include/headers/lights_incl_glsl.h"
+#include "shaders/internal/headers/canvas_frag.h"
+#include "shaders/internal/headers/canvas_vert.h"
 
 #include <unordered_map>
 
@@ -110,6 +112,16 @@ auto ShaderLibrary::ProcessShader(
     InjectAttributes(attrs, output);
     ResolveIncludes(output);
     return output;
+}
+
+auto ShaderLibrary::GetCanvasShaderSource() const -> std::vector<ShaderInfo> {
+    return {{
+        ShaderType::kVertexShader,
+        _SHADER_canvas_vert
+    }, {
+        ShaderType::kFragmentShader,
+        _SHADER_canvas_frag
+    }};
 }
 
 auto ShaderLibrary::InjectAttributes(

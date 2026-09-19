@@ -35,8 +35,11 @@
 
 namespace vglx {
 
+class Canvas;
+class CanvasRenderList;
 class RenderLists;
 class RenderTarget;
+class Sprite;
 
 struct alignas(16) FrameUniforms {
     Vector2 resolution {0.0f};
@@ -117,6 +120,7 @@ private:
 
     std::unique_ptr<RenderLists> render_lists_;
     std::unique_ptr<RenderLists> shadow_render_lists_;
+    std::unique_ptr<CanvasRenderList> canvas_render_list_;
 
     std::shared_ptr<DepthMaterial> depth_material_;
 
@@ -140,6 +144,10 @@ private:
     auto RenderObject(Renderable* renderable, Scene* scene, Camera* camera) -> void;
 
     auto RenderShadowMaps(Scene* scene, Camera* camera) -> void;
+
+    auto RenderCanvas(Canvas* canvas) -> void;
+
+    auto RenderSprite(Sprite* sprite, const Matrix3& projection) -> void;
 
     auto SetUniforms(
         GLProgram* program,

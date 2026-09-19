@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 ### Added
 
 - `const Get()` overloads on transforms that compute the matrix without updating the cache
+- 2D canvas rendering with `Canvas`, `Node2D`, and `Sprite` nodes drawn on top of the scene
+- `Rect` math type for describing rectangular regions
 
 ### Changed
 

@@ -28,7 +28,7 @@ class RenderTarget;
  *
  * The renderer owns GPU state and draw logic for rendering a @ref Scene with a
  * specified @ref Camera. Construct one alongside your @ref Window and call
- * @ref Render once per frame from your main loop.
+ * @ref Render once per frame.
  *
  * This class defines the rendering interface only. The actual rendering
  * implementation is provided by a backend, and multiple backends (for example,
@@ -135,6 +135,10 @@ public:
      * If you are using the runtime path, this is handled automatically.
      * In direct initialization flows, call the per-frame update routine
      * @ref Scene::Advance prior to rendering.
+     *
+     * When rendering to the default framebuffer, the scene's
+     * @ref Scene::canvas "canvas" is drawn on top of the tone-mapped frame
+     * in display space. Canvas is skipped when rendering to a render target.
      *
      * @param scene Pointer to the scene to render.
      * @param camera Pointer to the active camera.

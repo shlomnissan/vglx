@@ -8,6 +8,8 @@
 #include "renderer/gl/gl_renderer_impl.hpp"
 
 #include "vglx/cameras/camera.hpp"
+#include "vglx/canvas/canvas.hpp"
+#include "vglx/canvas/sprite.hpp"
 #include "vglx/core/render_target.hpp"
 #include "vglx/geometries/geometry.hpp"
 #include "vglx/lights/light.hpp"
@@ -18,6 +20,7 @@
 #include "vglx/materials/shader_material.hpp"
 #include "vglx/materials/unlit_material.hpp"
 #include "vglx/math/matrix3.hpp"
+#include "vglx/math/vector4.hpp"
 #include "vglx/scene/billboard.hpp"
 #include "vglx/scene/fog.hpp"
 #include "vglx/scene/instanced_mesh.hpp"
@@ -26,6 +29,7 @@
 #include "vglx/textures/texture.hpp"
 #include "vglx/textures/texture_2d.hpp"
 
+#include "core/canvas_render_list.hpp"
 #include "core/program_attributes.hpp"
 #include "core/render_lists.hpp"
 #include "utilities/logger.hpp"
@@ -49,6 +53,7 @@ Renderer::Impl::Impl(const Renderer::Parameters& params)
     viewport_height_(params.framebuffer_height),
     render_lists_(std::make_unique<RenderLists>()),
     shadow_render_lists_(std::make_unique<RenderLists>()),
+    canvas_render_list_(std::make_unique<CanvasRenderList>()),
     depth_material_(DepthMaterial::Create()),
     shadow_map_(params.shadow_map),
     auto_clear_(params.auto_clear),
@@ -132,9 +137,6 @@ auto Renderer::Impl::RenderObjects(Scene* scene, Camera* camera) -> void {
     }
 
     state_.SetDepthWrites(true);
-
-    rendered_objects_per_frame_ = rendered_objects_counter_;
-    rendered_objects_counter_ = 0;
 }
 
 auto Renderer::Impl::RenderObject(Renderable* renderable, Scene* scene, Camera* camera) -> void {
@@ -736,13 +738,96 @@ auto Renderer::Impl::Render(Scene* scene, Camera* camera, RenderTarget* target) 
 
     use_default_target ? scene_buffer_.End() : framebuffers_.End(target);
 
-    textures_.Reset();
     binding_state_.Reset();
     state_.Reset();
+    textures_.Reset();
 
     if (use_default_target) {
         present_pass_.Present(scene_buffer_, tone_mapping_, exposure_);
+        RenderCanvas(&scene->canvas);
     }
+
+    rendered_objects_per_frame_ = rendered_objects_counter_;
+    rendered_objects_counter_ = 0;
+}
+
+auto Renderer::Impl::RenderCanvas(Canvas* canvas) -> void {
+    const auto size = canvas->GetSize();
+    if (size.x <= 0.0f || size.y <= 0.0f) return;
+
+    auto program = programs_.GetCanvasProgram();
+    if (!program->IsValid()) return;
+
+    canvas->UpdateTransformHierarchy();
+    canvas_render_list_->ProcessCanvas(canvas);
+    if (canvas_render_list_->Renderables().empty()) return;
+
+    state_.SetDepthTest(false);
+    state_.SetBlending(Material::Blending::Normal);
+    state_.SetSide(Material::Side::TwoSided);
+    state_.UseProgram(program->ProgramId());
+
+    for (auto node : canvas_render_list_->Renderables()) {
+        if (node->GetNodeType() == Node2D::Type::Sprite) {
+            RenderSprite(static_cast<Sprite*>(node), canvas->projection_matrix);
+        }
+    }
+
+    binding_state_.Reset();
+    state_.Reset();
+    textures_.Reset();
+}
+
+auto Renderer::Impl::RenderSprite(Sprite* sprite, const Matrix3& projection) -> void {
+    if (sprite->texture == nullptr || sprite->texture->image == nullptr) return;
+
+    auto program = programs_.GetCanvasProgram();
+
+    const auto texture_size = Vector2 {
+        static_cast<float>(sprite->texture->image->width),
+        static_cast<float>(sprite->texture->image->height)
+    };
+
+    if (texture_size.x <= 0.0f || texture_size.y <= 0.0f) return;
+
+    const auto& geometry = sprite->GetGeometry();
+
+    constexpr auto texture_unit = 0;
+    if (textures_.Bind(sprite->texture, texture_unit) == 0u) return;
+    if (binding_state_.Bind(*geometry, *program) == 0u) return;
+
+    const auto region = sprite->region.value_or(
+        Rect {0.0f, 0.0f, texture_size.x, texture_size.y}
+    );
+
+    // Map the pixel region to normalized texture space as (u, v, width, height)
+    // with v flipped to match the quad's top-down texture coordinates since
+    // images are flipped on load.
+    const auto uv_rect = Vector4 {
+        region.x / texture_size.x,
+        1.0f - region.y / texture_size.y,
+        region.width / texture_size.x,
+        -region.height / texture_size.y
+    };
+
+    const auto size = sprite->GetSize();
+    const auto opacity = sprite->GetWorldOpacity();
+    const auto& model = sprite->GetCachedWorldTransform();
+
+    program->SetUniform(Uniform::Model, &model);
+    program->SetUniform(Uniform::Anchor, &sprite->anchor);
+    program->SetUniform(Uniform::Color, &sprite->color);
+    program->SetUniform(Uniform::Opacity, &opacity);
+    program->SetUniform(Uniform::TextureMap, &texture_unit);
+    program->SetUniform("u_Projection", &projection);
+    program->SetUniform("u_Size", &size);
+    program->SetUniform("u_UVRect", &uv_rect);
+    program->UpdateUniforms();
+
+    const auto index_count = static_cast<GLsizei>(geometry->GetIndexData().size());
+    glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
+
+    rendered_objects_counter_++;
 }
 
 auto Renderer::Impl::Clear(RenderTarget* target) -> void {

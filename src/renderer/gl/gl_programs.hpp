@@ -20,10 +20,14 @@ class GLPrograms {
 public:
     auto GetProgram(const ProgramAttributes& attrs) -> GLProgram*;
 
+    auto GetCanvasProgram() -> GLProgram*;
+
 private:
     ShaderLibrary shader_lib_ {};
 
     std::unordered_map<std::size_t, std::unique_ptr<GLProgram>> programs_ {};
+
+    std::unique_ptr<GLProgram> canvas_program_ {nullptr};
 };
 
 }

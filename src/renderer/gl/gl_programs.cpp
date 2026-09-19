@@ -31,4 +31,13 @@ auto GLPrograms::GetProgram(const ProgramAttributes& attrs) -> GLProgram* {
     return programs_[key].get();
 }
 
+auto GLPrograms::GetCanvasProgram() -> GLProgram* {
+    if (canvas_program_ == nullptr) {
+        canvas_program_ = std::make_unique<GLProgram>(shader_lib_.GetCanvasShaderSource());
+
+        Logger::Log(LogLevel::Debug, "Created the canvas shader program");
+    }
+    return canvas_program_.get();
+}
+
 }
