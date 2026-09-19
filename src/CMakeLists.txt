@@ -57,6 +57,26 @@ set(SOURCE_CODE
     "primitives/plane_geometry.cpp"
     "primitives/sphere_geometry.cpp"
     "primitives/torus_knot_geometry.cpp"
+    "scene/billboard.cpp"
+    "scene/instanced_mesh.cpp"
+    "scene/mesh.cpp"
+    "scene/node.cpp"
+    "scene/renderable.cpp"
+    "scene/scene.cpp"
+    "textures/dynamic_texture_2d.cpp"
+    "utilities/assert.hpp"
+    "utilities/data_series.hpp"
+    "utilities/hash.hpp"
+    "utilities/logger.cpp"
+    "utilities/logger.hpp"
+    "utilities/scoped_timer.hpp"
+    "utilities/stats.cpp"
+    "utilities/thread_pool.cpp"
+    "utilities/thread_pool.hpp"
+    "utilities/timer.cpp"
+)
+
+set(GL_SOURCES
     "renderer/gl/gl_background_pass.cpp"
     "renderer/gl/gl_background_pass.hpp"
     "renderer/gl/gl_binding_state.cpp"
@@ -91,23 +111,6 @@ set(SOURCE_CODE
     "renderer/gl/gl_uniform_buffer.hpp"
     "renderer/gl/gl_buffers.cpp"
     "renderer/gl/gl_buffers.hpp"
-    "scene/billboard.cpp"
-    "scene/instanced_mesh.cpp"
-    "scene/mesh.cpp"
-    "scene/node.cpp"
-    "scene/renderable.cpp"
-    "scene/scene.cpp"
-    "textures/dynamic_texture_2d.cpp"
-    "utilities/assert.hpp"
-    "utilities/data_series.hpp"
-    "utilities/hash.hpp"
-    "utilities/logger.cpp"
-    "utilities/logger.hpp"
-    "utilities/scoped_timer.hpp"
-    "utilities/stats.cpp"
-    "utilities/thread_pool.cpp"
-    "utilities/thread_pool.hpp"
-    "utilities/timer.cpp"
 )
 
 set(PUBLIC_HEADERS
@@ -236,7 +239,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE glad glfw)
+if (VGLX_EXPERIMENTAL_VULKAN)
+    find_package(Vulkan REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan glfw)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_VULKAN)
+else()
+    target_sources(${PROJECT_NAME} PRIVATE ${GL_SOURCES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE glad glfw)
+endif()
 
 if (VGLX_BUILD_IMGUI)
     set(IMGUI_SOURCES

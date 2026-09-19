@@ -17,6 +17,12 @@ option(VGLX_BUILD_EXAMPLES "Build example application" ON)
 option(VGLX_BUILD_IMGUI "Build and integrate ImGui from the vendored source" ON)
 option(VGLX_BUILD_TESTS "Build unit tests and test infrastructure using GTest" ON)
 option(VGLX_BUILD_BENCHMARKS "Build microbenchmarks using Google Benchmark" OFF)
+option(VGLX_EXPERIMENTAL_VULKAN "Build the experimental Vulkan renderer instead of OpenGL" OFF)
+
+if (VGLX_EXPERIMENTAL_VULKAN AND VGLX_BUILD_IMGUI)
+    message(WARNING "ImGui is not supported by the experimental Vulkan renderer, disabling VGLX_BUILD_IMGUI")
+    set(VGLX_BUILD_IMGUI OFF)
+endif()
 
 include(GNUInstallDirs)
 
