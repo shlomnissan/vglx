@@ -80,6 +80,11 @@ set(SOURCE_CODE
     "utilities/timer.cpp"
 )
 
+set(VULKAN_SOURCES
+    "renderer/vulkan/vk_renderer_impl.cpp"
+    "renderer/vulkan/vk_renderer_impl.hpp"
+)
+
 set(GL_SOURCES
     "renderer/gl/gl_background_pass.cpp"
     "renderer/gl/gl_background_pass.hpp"
@@ -244,13 +249,17 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE)
+
 if (VGLX_EXPERIMENTAL_VULKAN)
     find_package(Vulkan REQUIRED)
+    target_sources(${PROJECT_NAME} PRIVATE ${VULKAN_SOURCES})
     target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan glfw)
     target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_VULKAN)
 else()
     target_sources(${PROJECT_NAME} PRIVATE ${GL_SOURCES})
     target_link_libraries(${PROJECT_NAME} PRIVATE glad glfw)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_OPENGL)
 endif()
 
 if (VGLX_BUILD_IMGUI)

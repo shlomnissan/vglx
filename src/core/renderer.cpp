@@ -9,7 +9,13 @@
 
 #include "vglx/core/render_target.hpp"
 
+#ifdef VGLX_RENDERER_OPENGL
 #include "renderer/gl/gl_renderer_impl.hpp"
+#endif
+
+#ifdef VGLX_RENDERER_VULKAN
+#include "renderer/vulkan/vk_renderer_impl.hpp"
+#endif
 
 namespace vglx {
 
