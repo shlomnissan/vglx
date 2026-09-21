@@ -25,10 +25,11 @@ namespace vglx {
 
 namespace fs = std::filesystem;
 
-struct Image;
-class Texture2D;
 class CubeTexture;
+class Font;
 class Node;
+class Texture2D;
+struct Image;
 
 struct CubeTexturePaths {
     fs::path positive_x;
@@ -182,5 +183,25 @@ struct CubeTexturePaths {
 [[nodiscard]] VGLX_EXPORT auto LoadMesh(
     const fs::path& path
 ) -> std::expected<std::unique_ptr<Node>, std::string>;
+
+/**
+ * @brief Loads a font asset from disk.
+ *
+ * @code
+ * auto font = vglx::LoadFont("assets/fonts/futura_condensed.fnt");
+ * if (font.has_value()) {
+ *     // use font.value()
+ * } else {
+ *     std::println(stderr, "{}", font.error());
+ * }
+ * @endcode
+ *
+ * @param path Filesystem path to the font asset.
+ *
+ * @ingroup LoadersGroup
+ */
+[[nodiscard]] VGLX_EXPORT auto LoadFont(
+    const fs::path& path
+) -> std::expected<std::shared_ptr<Font>, std::string>;
 
 }
