@@ -40,6 +40,8 @@ set(SOURCE_CODE
     "lights/directional_light.cpp"
     "lights/point_light.cpp"
     "lights/spot_light.cpp"
+    "loaders/detail/bmfont_import.cpp"
+    "loaders/detail/bmfont_import.hpp"
     "loaders/detail/gltf_import.cpp"
     "loaders/detail/gltf_import.hpp"
     "loaders/detail/image_import.cpp"
@@ -48,6 +50,7 @@ set(SOURCE_CODE
     "loaders/detail/obj_import.hpp"
     "loaders/detail/texture_ref.hpp"
     "loaders/load_cube_texture.cpp"
+    "loaders/load_font.cpp"
     "loaders/load_image.cpp"
     "loaders/load_mesh.cpp"
     "loaders/load_texture.cpp"
@@ -75,6 +78,11 @@ set(SOURCE_CODE
     "utilities/thread_pool.cpp"
     "utilities/thread_pool.hpp"
     "utilities/timer.cpp"
+)
+
+set(VULKAN_SOURCES
+    "renderer/vulkan/vk_renderer_impl.cpp"
+    "renderer/vulkan/vk_renderer_impl.hpp"
 )
 
 set(GL_SOURCES
@@ -241,13 +249,17 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE)
+
 if (VGLX_EXPERIMENTAL_VULKAN)
     find_package(Vulkan REQUIRED)
+    target_sources(${PROJECT_NAME} PRIVATE ${VULKAN_SOURCES})
     target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan glfw)
     target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_VULKAN)
 else()
     target_sources(${PROJECT_NAME} PRIVATE ${GL_SOURCES})
     target_link_libraries(${PROJECT_NAME} PRIVATE glad glfw)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_OPENGL)
 endif()
 
 if (VGLX_BUILD_IMGUI)

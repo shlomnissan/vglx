@@ -30,10 +30,19 @@ namespace vglx {
  * and how far to move the pen after drawing it, and kerning pairs adjust
  * the spacing between specific pairs of characters.
  *
- * Fonts are typically loaded from a font description rather than populated
- * directly. All metrics are in pixels at the size the atlas was authored
- * for, given by @ref size. To draw text at a different size, scale them by
- * the target size divided by @ref size.
+ * Fonts are typically loaded using a font loader rather than instantiated directly.
+ *
+ * @code
+ * auto font = vglx::LoadFont("assets/fonts/futura_condensed.fnt");
+ * if (font.has_value()) {
+ *     // use font.value()
+ * } else {
+ *     std::println(stderr, "{}", font.error());
+ * }
+ * @endcode
+ *
+ * Currently, only single page bitmap fonts exported from
+ * [BMFont](https://www.angelcode.com/products/bmfont/) are supported.
  *
  * @ingroup CanvasGroup
  */
@@ -63,12 +72,12 @@ public:
     /**
      * @brief Distance in pixels from the top of a line to the baseline.
      *
-     * Glyph offsets are measured from the top of the line, so subtracting
+     * Glyph offsets are measured from the top of the line so subtracting
      * this value gives a glyph's position relative to the baseline.
      */
     float base {0.0f};
 
-    /// @brief Size in pixels the atlas was authored at.
+    /// @brief Font size in pixels the atlas was authored at.
     float size {0.0f};
 
     /**

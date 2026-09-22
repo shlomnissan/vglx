@@ -24,6 +24,10 @@
 #include "core/imgui_integration.hpp"
 #endif
 
+#ifdef VGLX_RENDERER_OPENGL
+#include <glad/glad.h>
+#endif
+
 namespace vglx {
 
 namespace {
@@ -57,18 +61,22 @@ auto Window::Impl::Initialize() -> std::expected<void, std::string> {
         return std::unexpected("Failed to initialize GLFW " + glfw_get_error());
     }
 
+#ifdef VGLX_RENDERER_OPENGL
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
     glfwWindowHint(GLFW_ALPHA_BITS, 8);
     glfwWindowHint(GLFW_DEPTH_BITS, 24);
     glfwWindowHint(GLFW_STENCIL_BITS, 8);
+#else
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+#endif
 
-    #ifdef __APPLE__
-        glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
-    #endif
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
+#endif
 
     window_ = glfwCreateWindow(
         params_.width,
@@ -82,12 +90,15 @@ auto Window::Impl::Initialize() -> std::expected<void, std::string> {
         return std::unexpected("Failed to create a GLFW window " + glfw_get_error());
     }
 
+#ifdef VGLX_RENDERER_OPENGL
     glfwMakeContextCurrent(window_);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         return std::unexpected("Failed to initialize GLAD OpenGL loader");
     }
 
     glfwSwapInterval(params_.vsync ? 1 : 0);
+#endif
+
     glfwSetWindowUserPointer(window_, this);
     glfwGetFramebufferSize(window_, &framebuffer_width, &framebuffer_height);
     glfwGetWindowSize(window_, &window_width, &window_height);
@@ -147,7 +158,9 @@ auto Window::Impl::EndUIFrame() -> void {
 }
 
 auto Window::Impl::SwapBuffers() -> void {
+#ifdef VGLX_RENDERER_OPENGL
     glfwSwapBuffers(window_);
+#endif
 }
 
 auto Window::Impl::RequestClose() -> void {
