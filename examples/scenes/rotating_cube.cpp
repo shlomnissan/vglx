@@ -5,6 +5,7 @@
 ===========================================================================
 */
 
+#include <print>
 #include <memory>
 
 #include "example_runner.hpp"
@@ -27,6 +28,11 @@ struct Scene : public ExampleScene {
             .color = 0xFFFFFFu,
             .intensity = 32.0f,
         }))->transform.Translate({2.0f, 2.5f, 4.0f});
+
+        auto result = vglx::LoadFont(ASSETS_DIR "/fonts/futura_condensed_medium.fnt");
+        if (!result.has_value()) {
+            std::println("{}", result.error());
+        }
     }
 
     auto OnUpdate(float dt) -> void override {
