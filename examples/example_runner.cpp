@@ -23,8 +23,6 @@ auto run_example(ExampleScene* scene, vglx::Camera* camera, const ExampleSetting
     }
 
     auto renderer = vglx::Renderer {{
-        .framebuffer_width = window.FramebufferWidth(),
-        .framebuffer_height = window.FramebufferHeight(),
         .sample_count = kSampleCount,
         .clear_color = settings.clear_color,
         .tone_mapping = settings.tone_mapping,
@@ -32,18 +30,12 @@ auto run_example(ExampleScene* scene, vglx::Camera* camera, const ExampleSetting
         .shadow_map = settings.shadow_map
     }};
 
-    if (auto result = renderer.Initialize(); !result.has_value()) {
+    if (auto result = renderer.Initialize(window); !result.has_value()) {
         std::println(stderr, "{}", result.error());
         return 1;
     }
 
     window.OnResize([&](const vglx::ResizeParameters& params){
-        renderer.SetViewport(
-            0, 0,
-            params.framebuffer_width,
-            params.framebuffer_height,
-            params.content_scale
-        );
         camera->Resize(params.window_width, params.window_height);
         scene->canvas.Resize(params.window_width, params.window_height);
     });

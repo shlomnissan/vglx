@@ -12,7 +12,7 @@ namespace vglx {
 
 Renderer::Impl::Impl(const Renderer::Parameters& params) {}
 
-auto Renderer::Impl::Initialize() -> std::expected<void, std::string> {
+auto Renderer::Impl::Initialize(Window::Impl& window) -> std::expected<void, std::string> {
     return {};
 }
 
@@ -20,7 +20,7 @@ auto Renderer::Impl::Clear(RenderTarget* target) -> void {}
 
 auto Renderer::Impl::Render(Scene* scene, Camera* camera, RenderTarget* target) -> void {}
 
-auto Renderer::Impl::SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void {}
+auto Renderer::Impl::SetViewport(const Viewport& viewport) -> void {}
 
 auto Renderer::Impl::SetClearColor(const Color& color) -> void {}
 

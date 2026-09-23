@@ -8,21 +8,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Added
 
-- `const Get()` overloads on transforms that compute the matrix without updating the cache
 - 2D canvas rendering with `Canvas`, `Node2D`, and `Sprite` nodes drawn on top of the scene
+- `const Get()` overloads on transforms that compute the matrix without updating the cache
 - `Rect` math type for describing rectangular regions
+- `Renderer::Viewport` for describing a viewport rectangle in framebuffer pixels
 
 ### Changed
 
+- `Renderer::Initialize` now takes the `Window` to render to (breaking)
+- `Renderer::SetViewport` pins an explicit rectangle and no longer takes the content scale (breaking)
 - Renamed `Transform2::center` to `pivot` (breaking)
 
 ### Removed
 
+- `framebuffer_width` and `framebuffer_height` from `Renderer::Parameters` (breaking)
 - `Node::UpdateWorldTransform` and `Node::ShouldUpdateWorldTransform` (breaking)
 
 ### Fixed
 
 - Stale descendant transforms after querying the world position of a moved node
+- Viewport offsets were ignored when presenting to the default framebuffer
 
 ## [0.2.0] - 2026-09-16
 

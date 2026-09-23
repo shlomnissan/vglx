@@ -32,6 +32,8 @@
 #include "core/canvas_render_list.hpp"
 #include "core/program_attributes.hpp"
 #include "core/render_lists.hpp"
+#include "core/window_impl.hpp"
+#include "utilities/assert.hpp"
 #include "utilities/logger.hpp"
 #include "utilities/scoped_timer.hpp"
 
@@ -44,13 +46,7 @@
 namespace vglx {
 
 Renderer::Impl::Impl(const Renderer::Parameters& params)
-  : scene_buffer_({
-        params.framebuffer_width,
-        params.framebuffer_height,
-        params.sample_count,
-    }),
-    viewport_width_(params.framebuffer_width),
-    viewport_height_(params.framebuffer_height),
+  : scene_buffer_(params.sample_count),
     render_lists_(std::make_unique<RenderLists>()),
     shadow_render_lists_(std::make_unique<RenderLists>()),
     canvas_render_list_(std::make_unique<CanvasRenderList>()),
@@ -60,13 +56,12 @@ Renderer::Impl::Impl(const Renderer::Parameters& params)
     tone_mapping_(params.tone_mapping),
     exposure_(params.exposure)
 {
-    state_.SetViewport(0, 0, params.framebuffer_width, params.framebuffer_height);
     state_.SetClearColor(params.clear_color);
 
     depth_material_->fog = false;
 }
 
-auto Renderer::Impl::Initialize() -> std::expected<void, std::string> {
+auto Renderer::Impl::Initialize(Window::Impl& window) -> std::expected<void, std::string> {
 #if !defined(NDEBUG)
     const auto timer = ScopedTimer(
         "Renderer initialization time",
@@ -75,13 +70,19 @@ auto Renderer::Impl::Initialize() -> std::expected<void, std::string> {
     );
 #endif
 
+    window_ = &window;
+
     const auto& info = gl::driver_info();
     Logger::Log(LogLevel::Info, "Vendor: {}", info.vendor);
     Logger::Log(LogLevel::Info, "Renderer: {}", info.renderer);
     Logger::Log(LogLevel::Info, "Version: {}", info.version);
     Logger::Log(LogLevel::Info, "GLSL Version: {}", info.glsl_version);
 
-    if (auto result = scene_buffer_.Initialize(); !result.has_value()) {
+    if (!viewport_pinned_) {
+        viewport_ = {0, 0, window.framebuffer_width, window.framebuffer_height};
+    }
+
+    if (auto result = scene_buffer_.Initialize(viewport_.width, viewport_.height); !result.has_value()) {
         return std::unexpected(result.error());
     }
 
@@ -103,6 +104,7 @@ auto Renderer::Impl::Initialize() -> std::expected<void, std::string> {
 
     state_.SetDepthFunction(Material::Depth::LessEqual);
     state_.SetSeamlessCubemapFiltering();
+    state_.SetViewport(viewport_.x, viewport_.y, viewport_.width, viewport_.height);
 
     return {};
 }
@@ -697,9 +699,14 @@ auto Renderer::Impl::RenderShadowMaps(Scene* scene, Camera* camera) -> void {
 }
 
 auto Renderer::Impl::Render(Scene* scene, Camera* camera, RenderTarget* target) -> void {
-    frame_.resolution = target != nullptr
-        ? Vector2 { static_cast<float>(target->width), static_cast<float>(target->height) }
-        : Vector2 { static_cast<float>(viewport_width_), static_cast<float>(viewport_height_) };
+    const auto use_default_target = target == nullptr;
+    if (use_default_target) {
+        SyncWithWindow();
+    }
+
+    frame_.resolution = use_default_target
+        ? Vector2 { static_cast<float>(viewport_.width), static_cast<float>(viewport_.height) }
+        : Vector2 { static_cast<float>(target->width), static_cast<float>(target->height) };
 
     frame_.time = static_cast<float>(timer_.GetElapsedSeconds());
 
@@ -721,7 +728,6 @@ auto Renderer::Impl::Render(Scene* scene, Camera* camera, RenderTarget* target) 
         RenderShadowMaps(scene, camera);
     }
 
-    const auto use_default_target = target == nullptr;
     use_default_target ? scene_buffer_.Begin() : framebuffers_.Begin(target);
 
     if (auto_clear_) {
@@ -743,6 +749,7 @@ auto Renderer::Impl::Render(Scene* scene, Camera* camera, RenderTarget* target) 
     textures_.Reset();
 
     if (use_default_target) {
+        state_.SetViewport(viewport_.x, viewport_.y, viewport_.width, viewport_.height);
         present_pass_.Present(scene_buffer_, tone_mapping_, exposure_);
         RenderCanvas(&scene->canvas);
     }
@@ -831,19 +838,47 @@ auto Renderer::Impl::RenderSprite(Sprite* sprite, const Matrix3& projection) -> 
 }
 
 auto Renderer::Impl::Clear(RenderTarget* target) -> void {
-    target == nullptr ? scene_buffer_.Begin() : framebuffers_.Begin(target);
+    const auto use_default_target = target == nullptr;
+    if (use_default_target) {
+        SyncWithWindow();
+    }
+
+    use_default_target ? scene_buffer_.Begin() : framebuffers_.Begin(target);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     framebuffers_.Reset();
 }
 
-auto Renderer::Impl::SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void {
-    viewport_width_ = width;
-    viewport_height_ = height;
-    state_.SetViewport(x, y, width, height);
-    scene_buffer_.ResizeViewport(width, height);
-    frame_.content_scale = content_scale;
+auto Renderer::Impl::SetViewport(const Viewport& viewport) -> void {
+    viewport_pinned_ = true;
+
+    if (viewport == viewport_) {
+        return;
+    }
+
+    viewport_ = viewport;
+    state_.SetViewport(viewport_.x, viewport_.y, viewport_.width, viewport_.height);
+    scene_buffer_.ResizeViewport(viewport_.width, viewport_.height);
+}
+
+auto Renderer::Impl::SyncWithWindow() -> void {
+    VGLX_ASSERT(window_ != nullptr, "Renderer used before Initialize");
+
+    frame_.content_scale = window_->content_scale;
+
+    if (viewport_pinned_) {
+        return;
+    }
+
+    const auto viewport = Viewport {0, 0, window_->framebuffer_width, window_->framebuffer_height};
+    if (viewport == viewport_) {
+        return;
+    }
+
+    viewport_ = viewport;
+    state_.SetViewport(viewport_.x, viewport_.y, viewport_.width, viewport_.height);
+    scene_buffer_.ResizeViewport(viewport_.width, viewport_.height);
 }
 
 auto Renderer::Impl::SetClearColor(const Color& color) -> void {

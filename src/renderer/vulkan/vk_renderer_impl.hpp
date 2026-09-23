@@ -8,6 +8,7 @@
 #pragma once
 
 #include "vglx/core/renderer.hpp"
+#include "vglx/core/window.hpp"
 
 #include <expected>
 #include <string>
@@ -24,13 +25,13 @@ public:
     auto operator=(const Impl&) -> Impl& = delete;
     auto operator=(Impl&&) -> Impl& = delete;
 
-    [[nodiscard]] auto Initialize() -> std::expected<void, std::string>;
+    [[nodiscard]] auto Initialize(Window::Impl& window) -> std::expected<void, std::string>;
 
     auto Render(Scene* scene, Camera* camera, RenderTarget* target = nullptr) -> void;
 
     auto Clear(RenderTarget* target = nullptr) -> void;
 
-    auto SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void;
+    auto SetViewport(const Viewport& viewport) -> void;
 
     auto SetClearColor(const Color& color) -> void;
 

@@ -11,7 +11,6 @@
 
 #include "vglx/cameras/camera.hpp"
 #include "vglx/math/color.hpp"
-#include "vglx/math/vector2.hpp"
 #include "vglx/scene/scene.hpp"
 
 #include <cstddef>
@@ -22,13 +21,13 @@
 namespace vglx {
 
 class RenderTarget;
+class Window;
 
 /**
  * @brief Renderer interface for drawing a scene with a given camera.
  *
  * The renderer owns GPU state and draw logic for rendering a @ref Scene with a
- * specified @ref Camera. Construct one alongside your @ref Window and call
- * @ref Render once per frame.
+ * specified @ref Camera. Construct one alongside your @ref Window, and call @ref Render once per frame.
  *
  * This class defines the rendering interface only. The actual rendering
  * implementation is provided by a backend, and multiple backends (for example,
@@ -36,21 +35,20 @@ class RenderTarget;
  *
  * @code
  * vglx::Renderer renderer({
- *   .framebuffer_width = window.FramebufferWidth(),
- *   .framebuffer_height = window.FramebufferHeight(),
  *   .clear_color = 0x444444u
  * });
  *
- * auto ok = renderer.Initialize();
+ * auto ok = renderer.Initialize(window);
  * if (!ok) {
  *   HandleError(ok.error());
  * }
  * @endcode
  *
- * The renderer assumes a valid graphics context is current on the
- * calling thread. When the window is resized, call @ref SetViewport to adjust
- * the render area (or recreate with new parameters if you manage your own
- * framebuffers).
+ * Once initialized, the renderer reads the framebuffer size and content scale
+ * from the window at the start of every frame, so the viewport follows window
+ * resizes without any user code. Call @ref SetViewport only to draw into a
+ * sub-region of the framebuffer. The renderer must be destroyed before the
+ * window it was initialized with.
  *
  * @ingroup CoreGroup
  */
@@ -75,8 +73,6 @@ public:
 
     /// @brief Parameters for constructing a @ref Renderer object.
     struct Parameters {
-        int framebuffer_width {1280}; ///< Current framebuffer width in pixels.
-        int framebuffer_height {720}; ///< Current framebuffer height in pixels.
         int sample_count {1}; ///< Antialiasing level (e.g., 4x MSAA).
         Color clear_color {0x000000u}; ///< Clear color used at the start of a frame.
         bool auto_clear {true}; ///< Automatic buffer clearing at the start of a frame.
@@ -108,6 +104,20 @@ public:
     };
 
     /**
+     * @brief Viewport rectangle in framebuffer pixels.
+     *
+     * The origin is the bottom-left corner of the framebuffer.
+     */
+    struct Viewport {
+        int x {0}; ///< Left edge in pixels.
+        int y {0}; ///< Bottom edge in pixels.
+        int width {0}; ///< Width in pixels.
+        int height {0}; ///< Height in pixels.
+
+        auto operator==(const Viewport&) const -> bool = default;
+    };
+
+    /**
      * @brief Constructs a renderer.
      *
      * GPU resources are not created until @ref Initialize is called.
@@ -124,9 +134,17 @@ public:
     auto operator=(Renderer&&) noexcept -> Renderer& = delete;
 
     /**
-     * @brief Initializes GPU state and allocates required resources.
+     * @brief Initializes GPU state and binds the renderer to a window.
+     *
+     * The window must be initialized first. From this point on the renderer
+     * reads the framebuffer size and content scale from the window at the
+     * start of every frame that targets the default framebuffer so resizes
+     * are handled automatically. The renderer keeps a reference to the window
+     * for its lifetime and must be destroyed before it.
+     *
+     * @param window The window whose framebuffer the renderer presents to.
      */
-    [[nodiscard]] auto Initialize() -> std::expected<void, std::string>;
+    [[nodiscard]] auto Initialize(Window& window) -> std::expected<void, std::string>;
 
     /**
      * @brief Renders the given scene from the specified camera.
@@ -160,24 +178,16 @@ public:
     auto Clear(RenderTarget* target = nullptr) -> void;
 
     /**
-     * @brief Sets the active viewport rectangle in pixels.
+     * @brief Pins the viewport to an explicit rectangle.
      *
-     * Adjusts the area of the framebuffer that subsequent draw calls will target.
-     * This should be called whenever the window or framebuffer size changes, or
-     * when rendering to a specific sub-region of the target surface.
+     * By default the viewport covers the full framebuffer of the window passed
+     * to @ref Initialize and follows it across resizes. Calling this method
+     * replaces that behavior with a fixed rectangle.
      *
-     * When using the runtime-managed rendering path, the viewport is updated
-     * automatically. In manual initialization flows, you are responsible for
-     * calling this method whenever the framebuffer dimensions change.
-     *
-     * @param x Left pixel of the viewport.
-     * @param y Bottom pixel of the viewport.
-     * @param width Viewport width in pixels.
-     * @param height Viewport height in pixels.
-     * @param content_scale Content scale per axis: the display's DPI relative
-     * to the platform default.
+     * @param viewport @ref Renderer::Viewport "Viewport rectangle" to draw
+     * into, in framebuffer pixels.
      */
-    auto SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void;
+    auto SetViewport(const Viewport& viewport) -> void;
 
     /**
      * @brief Sets the clear color for subsequent frames.

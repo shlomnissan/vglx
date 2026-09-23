@@ -8,6 +8,7 @@
 #include "vglx/core/renderer.hpp"
 
 #include "vglx/core/render_target.hpp"
+#include "vglx/core/window.hpp"
 
 #ifdef VGLX_RENDERER_OPENGL
 #include "renderer/gl/gl_renderer_impl.hpp"
@@ -22,8 +23,8 @@ namespace vglx {
 Renderer::Renderer(const Renderer::Parameters& params)
     : impl_(std::make_unique<Impl>(params)) {}
 
-auto Renderer::Initialize() -> std::expected<void, std::string> {
-    return impl_->Initialize();
+auto Renderer::Initialize(Window& window) -> std::expected<void, std::string> {
+    return impl_->Initialize(*window.impl_);
 }
 
 auto Renderer::Render(Scene* scene, Camera* camera, RenderTarget* target) -> void {
@@ -34,8 +35,8 @@ auto Renderer::Clear(RenderTarget* target) -> void {
     impl_->Clear(target);
 }
 
-auto Renderer::SetViewport(int x, int y, int width, int height, Vector2 content_scale) -> void {
-    impl_->SetViewport(x, y, width, height, content_scale);
+auto Renderer::SetViewport(const Viewport& viewport) -> void {
+    impl_->SetViewport(viewport);
 }
 
 auto Renderer::SetClearColor(const Color& color) -> void {

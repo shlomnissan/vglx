@@ -138,7 +138,7 @@ Built-in uniforms provide per-draw or per-frame state supplied by the engine. De
 | `u_AlphaTest`        | `float` | Alpha cutoff                                |
 | `u_AmbientLight`     | `vec3`  | Ambient light color scaled by intensity     |
 
-Per-frame render state is provided through a uniform block. The resolution is the size of the render target being drawn to, or the viewport when rendering to the screen. The content scale is the display's DPI relative to the platform default, as passed to [SetViewport](/reference/core/renderer). The time is the number of seconds elapsed since the renderer was created, which is useful for animating shaders without updating a custom uniform every frame:
+Per-frame render state is provided through a uniform block. The resolution is the size of the render target being drawn to or the viewport when rendering to the screen. The content scale is the display's DPI relative to the platform default, as reported by the [Window](/reference/core/window). The time is the number of seconds elapsed since the renderer was created which is useful for animating shaders without updating a custom uniform every frame:
 
 ```glsl
 layout(std140) uniform ub_Frame {

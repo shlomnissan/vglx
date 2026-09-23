@@ -19,6 +19,8 @@
 
 namespace vglx {
 
+class Renderer;
+
 /**
  * @brief Parameters passed to resize callbacks.
  *
@@ -36,7 +38,7 @@ struct ResizeParameters {
  * @brief Function signature for window-resize notifications.
  *
  * The callback is invoked when the window’s client-area size changes.
- * Use the provided sizes to update viewports and camera projection.
+ * Use the provided sizes to update camera projections and canvas layout.
  *
  * @related Window
  */
@@ -208,6 +210,8 @@ public:
 
 private:
     /// @cond INTERNAL
+    friend class Renderer;
+
     std::unique_ptr<Impl> impl_;
     /// @endcond
 };

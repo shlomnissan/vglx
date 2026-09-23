@@ -15,13 +15,7 @@ namespace vglx {
 
 class GLSceneBuffer {
 public:
-    struct Parameters {
-        int framebuffer_width;
-        int framebuffer_height;
-        int sample_count;
-    };
-
-    explicit GLSceneBuffer(const Parameters& params);
+    explicit GLSceneBuffer(int sample_count);
 
     GLSceneBuffer(const GLSceneBuffer&) = delete;
     GLSceneBuffer(GLSceneBuffer&&) = delete;
@@ -29,7 +23,7 @@ public:
     auto operator=(const GLSceneBuffer&) -> GLSceneBuffer& = delete;
     auto operator=(GLSceneBuffer&&) -> GLSceneBuffer& = delete;
 
-    [[nodiscard]] auto Initialize() -> std::expected<void, std::string>;
+    [[nodiscard]] auto Initialize(int width, int height) -> std::expected<void, std::string>;
 
     auto ResizeViewport(int width, int height) -> void;
 

@@ -72,12 +72,10 @@ auto main() -> int {
     }
 
     auto renderer = Renderer {{
-        .framebuffer_width = window.FramebufferWidth(),
-        .framebuffer_height = window.FramebufferHeight(),
         .sample_count = 4,
     }};
 
-    if (auto result = renderer.Initialize(); !result.has_value()) {
+    if (auto result = renderer.Initialize(window); !result.has_value()) {
         std::println(stderr, "{}", result.error());
         return 1;
     }

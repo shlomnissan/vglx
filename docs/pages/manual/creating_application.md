@@ -102,13 +102,11 @@ auto main() -> int {
     }
 
     auto renderer = Renderer {{
-        .framebuffer_width = window.FramebufferWidth(),
-        .framebuffer_height = window.FramebufferHeight(),
         .sample_count = 4,
         .clear_color = 0x000000
     }};
 
-    if (auto result = renderer.Initialize(); !result.has_value()) {
+    if (auto result = renderer.Initialize(window); !result.has_value()) {
         std::println(stderr, "{}", result.error());
         return 1;
     }
@@ -117,7 +115,7 @@ auto main() -> int {
 }
 ```
 
-`Window` opens a 1280×720 window with 4× multisampling and v-sync. `Renderer` is told the framebuffer size up front so it can size its render targets to match. Both `Initialize` calls return a `std::expected<void, std::string>`; on failure we print the error and exit. There is no hidden runtime catching these errors for you.
+`Window` opens a 1280×720 window with 4× multisampling and v-sync. `Renderer` is initialized with the window so it can size its render targets to the framebuffer and follow it when the window resizes. Both `Initialize` calls return a `std::expected<void, std::string>`. On failure we print the error and exit. There is no hidden runtime catching these errors for you.
 
 Build and run. You should briefly see an empty window before the program exits. We still need a camera, a scene, and a loop to keep the window open and put something on screen.
 
@@ -213,11 +211,6 @@ We have a window, a renderer, a camera, and a scene. What we don’t have yet is
 
 ```cpp
 window.OnResize([&](const ResizeParameters& params) {
-    renderer.SetViewport(0, 0,
-        params.framebuffer_width,
-        params.framebuffer_height,
-        params.content_scale
-    );
     camera->Resize(params.window_width, params.window_height);
 });
 
@@ -230,7 +223,7 @@ while (!window.ShouldClose()) {
 }
 ```
 
-The resize callback fans out to the things that care about the new size: the renderer updates its viewport, and the camera recomputes its projection. Both are owned by us, so we wire them up directly — no hidden machinery in between.
+The renderer tracks the framebuffer size on its own, so the resize callback only needs to reach the camera, which recomputes its projection. The camera is owned by us, so we wire it up directly — no hidden machinery in between.
 
 [FrameTimer](/reference/utilities/frame_timer) tracks elapsed time between frames. Inside the loop we poll events, advance the scene by the time delta, render the frame, and swap buffers. That’s the whole game loop. If you run the application now you should see a blue square in the center of the window. That’s the front face of the cube viewed straight on.
 
@@ -311,12 +304,10 @@ auto main() -> int {
     }
 
     auto renderer = Renderer {{
-        .framebuffer_width = window.FramebufferWidth(),
-        .framebuffer_height = window.FramebufferHeight(),
         .sample_count = 4,
         .clear_color = 0x000000
     }};
-    if (auto result = renderer.Initialize(); !result.has_value()) {
+    if (auto result = renderer.Initialize(window); !result.has_value()) {
         std::println(stderr, "{}", result.error());
         return 1;
     }
@@ -332,11 +323,6 @@ auto main() -> int {
     auto scene = std::make_unique<MyScene>(camera.get());
 
     window.OnResize([&](const ResizeParameters& params) {
-        renderer.SetViewport(0, 0,
-            params.framebuffer_width,
-            params.framebuffer_height,
-            params.content_scale
-        );
         camera->Resize(params.window_width, params.window_height);
     });
 

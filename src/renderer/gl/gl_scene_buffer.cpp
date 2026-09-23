@@ -38,13 +38,12 @@ struct GLSceneBuffer::Impl {
 
     bool is_msaa {false};
 
-    explicit Impl(const GLSceneBuffer::Parameters& params)
-      : width(params.framebuffer_width),
-        height(params.framebuffer_height),
-        samples(std::max(params.sample_count, 1)),
-        is_msaa(samples > 1) {}
+    explicit Impl(int sample_count) : samples(std::max(sample_count, 1)), is_msaa(samples > 1) {}
 
-    auto Init() -> std::expected<void, std::string> {
+    auto Initialize(int width, int height) -> std::expected<void, std::string> {
+        this->width = width;
+        this->height = height;
+
         if (width <= 0 || height <= 0) {
             return std::unexpected("Scene buffer invalid size");
         }
@@ -185,18 +184,20 @@ struct GLSceneBuffer::Impl {
         return {};
     }
 
-    auto ResizeViewport(int new_width, int new_height) -> void {
-        if (new_width <= 0 || new_height <= 0) return;
+    auto ResizeViewport(int width, int height) -> void {
+        if (width <= 0 || height <= 0) return;
 
-        if (new_width == width && new_height == height) return;
+        if (resolve_color == 0) return;
+
+        if (width == this->width && height == this->height) return;
 
         glBindTexture(GL_TEXTURE_2D, resolve_color);
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
             kColorFormat,
-            new_width,
-            new_height,
+            width,
+            height,
             0,
             GL_RGBA,
             GL_HALF_FLOAT,
@@ -211,8 +212,8 @@ struct GLSceneBuffer::Impl {
             glRenderbufferStorage(
                 GL_RENDERBUFFER,
                 kDepthStencilFormat,
-                new_width,
-                new_height
+                width,
+                height
             );
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -230,8 +231,8 @@ struct GLSceneBuffer::Impl {
                 GL_RENDERBUFFER,
                 samples,
                 kColorFormat,
-                new_width,
-                new_height
+                width,
+                height
             );
 
             glBindRenderbuffer(GL_RENDERBUFFER, msaa_depth_stencil);
@@ -239,8 +240,8 @@ struct GLSceneBuffer::Impl {
                 GL_RENDERBUFFER,
                 samples,
                 kDepthStencilFormat,
-                new_width,
-                new_height
+                width,
+                height
             );
 
             auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -252,8 +253,8 @@ struct GLSceneBuffer::Impl {
             );
         }
 
-        width = new_width;
-        height = new_height;
+        this->width = width;
+        this->height = height;
     }
 
     auto Begin() const -> void {
@@ -300,11 +301,10 @@ struct GLSceneBuffer::Impl {
     }
 };
 
-GLSceneBuffer::GLSceneBuffer(const Parameters& params)
-  : impl_(std::make_unique<GLSceneBuffer::Impl>(params)) {}
+GLSceneBuffer::GLSceneBuffer(int sample_count) : impl_(std::make_unique<GLSceneBuffer::Impl>(sample_count)) {}
 
-auto GLSceneBuffer::Initialize() -> std::expected<void, std::string> {
-    return impl_->Init();
+auto GLSceneBuffer::Initialize(int width, int height) -> std::expected<void, std::string> {
+    return impl_->Initialize(width, height);
 }
 
 auto GLSceneBuffer::ResizeViewport(int width, int height) -> void {
