@@ -7,12 +7,16 @@
 
 #include "loaders/detail/bmfont_import.hpp"
 
+#include <charconv>
 #include <expected>
 #include <format>
 #include <fstream>
+#include <iterator>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -20,7 +24,7 @@ namespace vglx::detail::bmfont {
 
 namespace {
 
-struct ParsedLineOutput {
+struct Fields {
     struct Token {
         std::string key;
         std::string value;
@@ -28,9 +32,37 @@ struct ParsedLineOutput {
 
     std::string type;
     std::vector<Token> tokens {};
+    std::optional<std::string> error {};
+
+    auto String(std::string_view key) -> std::string_view {
+        for (const auto& token : tokens) {
+            if (token.key == key) return token.value;
+        }
+
+        if (!error) {
+            error = std::format("'{}' line is missing field '{}'", type, key);
+        }
+
+        return {};
+    }
+
+    auto Int(std::string_view key) -> int {
+        auto value = String(key);
+        auto result = 0;
+        auto end = value.data() + value.size();
+        auto [ptr, ec] = std::from_chars(value.data(), end, result);
+        if (!error && (ec != std::errc {} || ptr != end)) {
+            error = std::format("'{}' line has non-integer field {}={}", type, key, value);
+        }
+        return result;
+    }
+
+    auto Float(std::string_view key) -> float {
+        return static_cast<float>(Int(key));
+    }
 };
 
-auto parse_line(std::string_view line) -> std::expected<ParsedLineOutput, std::string> {
+auto parse_line(std::string_view line) -> std::expected<Fields, std::string> {
     if (line.ends_with('\r')) line.remove_suffix(1);
 
     auto type_end = line.find_first_of(" \t");
@@ -38,7 +70,7 @@ auto parse_line(std::string_view line) -> std::expected<ParsedLineOutput, std::s
         return std::unexpected("malformed line missing type separator");
     }
 
-    auto output = ParsedLineOutput {};
+    auto output = Fields {};
     output.type = line.substr(0, type_end);
 
     auto fields = line.substr(type_end + 1);
@@ -48,7 +80,7 @@ auto parse_line(std::string_view line) -> std::expected<ParsedLineOutput, std::s
 
         fields.remove_prefix(field_begin);
 
-        auto divider = fields.find_first_of('=');
+        auto divider = fields.find('=');
         if (divider == std::string_view::npos) {
             return std::unexpected("malformed field missing equals divider");
         }
@@ -59,10 +91,19 @@ auto parse_line(std::string_view line) -> std::expected<ParsedLineOutput, std::s
         auto value = std::string {};
         if (fields.starts_with('"')) {
             fields.remove_prefix(1);
-            auto closing_quote = fields.find_first_of('"');
+            auto closing_quote = fields.find('"');
+
+            while (closing_quote != std::string_view::npos &&
+                   closing_quote + 1 < fields.size() &&
+                   fields[closing_quote + 1] != ' ' &&
+                   fields[closing_quote + 1] != '\t') {
+                closing_quote = fields.find('"', closing_quote + 1);
+            }
+
             if (closing_quote == std::string_view::npos) {
                 return std::unexpected("unterminated quoted value");
             }
+
             value = fields.substr(0, closing_quote);
             fields.remove_prefix(closing_quote + 1);
         } else {
@@ -71,7 +112,7 @@ auto parse_line(std::string_view line) -> std::expected<ParsedLineOutput, std::s
                 value = fields;
                 fields = {};
             } else {
-                value = fields.substr(0,  field_end);
+                value = fields.substr(0, field_end);
                 fields.remove_prefix(field_end);
             }
         }
@@ -94,33 +135,85 @@ auto import(const fs::path& path) -> std::expected<BMFontResult, std::string> {
     auto file = std::ifstream {path, std::ios::binary};
     if (!file) return make_error("cannot open file");
 
-    file >> std::noskipws;
-
-    auto text = std::views::istream<char>(file) | std::ranges::to<std::string>();
+    auto text = std::string {std::istreambuf_iterator<char> {file}, {}};
     if (text.empty()) return make_error("file is empty");
     if (text.starts_with("BMF")) {
         return make_error("binary format is unsupported");
     }
 
-    auto lines = text | std::views::split('\n');
-    auto iter = lines.begin();
     auto output = BMFontResult {};
+    auto seen_info = false;
+    auto seen_common = false;
 
-    auto info = parse_line(std::string_view {*iter});
-    if (!info.has_value()) return make_error(info.error());
+    for (auto chunk : text | std::views::split('\n')) {
+        auto line = std::string_view {chunk};
+        if (line.find_first_not_of(" \t\r") == std::string_view::npos) continue;
 
-    if (info->type != "info") {
+        auto fields = parse_line(line);
+        if (!fields.has_value()) {
+            return make_error(fields.error());
+        }
+
+        if (fields->type == "info") {
+            seen_info = true;
+            output.font_face = fields->String("face");
+            output.size = fields->Float("size");
+        }
+
+        if (fields->type == "common") {
+            seen_common = true;
+            output.line_height = fields->Float("lineHeight");
+            output.base = fields->Float("base");
+            if (fields->Int("pages") > 1) {
+                return make_error("multi-page fonts are unsupported");
+            }
+        }
+
+        if (fields->type == "page") {
+            output.page = path.parent_path() / fields->String("file");
+        }
+
+        if (fields->type == "char") {
+            output.chars.emplace_back(BMFontResult::Char {
+                .id = fields->Int("id"),
+                .advance = fields->Float("xadvance"),
+                .region = {
+                    fields->Float("x"),
+                    fields->Float("y"),
+                    fields->Float("width"),
+                    fields->Float("height")
+                },
+                .offset = {
+                    fields->Float("xoffset"),
+                    fields->Float("yoffset")
+                }
+            });
+        }
+
+        if (fields->type == "kerning") {
+            output.kernings.emplace_back(BMFontResult::Kerning {
+                .first = fields->Int("first"),
+                .second = fields->Int("second"),
+                .amount = fields->Float("amount")
+            });
+        }
+
+        if (fields->error) return make_error(*fields->error);
+    }
+
+    if (!seen_info) {
         return make_error("missing info entry");
     }
 
-    for (auto [key, value] : info->tokens) {
-        if (key == "face") output.font_face = value;
-        if (key == "size") output.size = std::stof(value);
+    if (!seen_common) {
+        return make_error("missing common entry");
     }
 
-    // TODO: implement
+    if (output.page.empty()) {
+        return make_error("missing page entry");
+    }
 
-    return std::unexpected("not implemented yet");
+    return output;
 }
 
 }
