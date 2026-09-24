@@ -9,9 +9,9 @@
 
 #include "vglx_export.h"
 
-#include "vglx/canvas/node2d.hpp"
+#include "vglx/canvas/renderable2d.hpp"
 #include "vglx/geometries/geometry.hpp"
-#include "vglx/math/color.hpp"
+#include "vglx/math/matrix3.hpp"
 #include "vglx/math/rect.hpp"
 #include "vglx/math/vector2.hpp"
 #include "vglx/textures/texture_2d.hpp"
@@ -46,7 +46,7 @@ namespace vglx {
  *
  * @ingroup CanvasGroup
  */
-class VGLX_EXPORT Sprite : public Node2D {
+class VGLX_EXPORT Sprite : public Renderable2D {
 public:
     /// @brief Texture drawn by the sprite. A null texture draws nothing.
     std::shared_ptr<Texture2D> texture;
@@ -72,9 +72,6 @@ public:
      * - `(1.0, 1.0)` bottom-right corner of the sprite.
      */
     Vector2 anchor {0.0f, 0.0f};
-
-    /// @brief Color multiplied with the texture. Defaults to white.
-    Color color {0xFFFFFFu};
 
     /**
      * @brief Constructs a sprite.
@@ -109,20 +106,33 @@ public:
     }
 
     /**
-     * @brief Returns `true`, identifying this node as renderable.
+     * @brief Returns the unit quad shared by all sprites.
      */
-    [[nodiscard]] auto IsRenderable() const -> bool override {
-        return true;
-    }
-
-    /// @cond INTERNAL
-    [[nodiscard]] auto GetGeometry() const -> std::shared_ptr<Geometry> {
+    [[nodiscard]] auto GetGeometry() -> std::shared_ptr<Geometry> override {
         return SharedGeometry();
     }
-    /// @endcond
+
+    /**
+     * @brief Returns the sprite's @ref texture.
+     */
+    [[nodiscard]] auto GetTexture() const -> std::shared_ptr<Texture2D> override {
+        return texture;
+    }
+
+    /**
+     * @brief Scales the unit quad to the sprite's size and shifts it by the anchor.
+     */
+    [[nodiscard]] auto GetGeometryTransform() const -> Matrix3 override;
+
+    /**
+     * @brief Maps the unit quad's texture coordinates onto the @ref region.
+     */
+    [[nodiscard]] auto GetTextureTransform() const -> Matrix3 override;
 
 private:
     /// @cond INTERNAL
+    [[nodiscard]] auto TextureSize() const -> Vector2;
+
     static auto SharedGeometry() -> std::shared_ptr<Geometry>&;
     /// @endcond
 };

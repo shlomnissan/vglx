@@ -17,10 +17,38 @@ namespace vglx {
 Sprite::Sprite(std::shared_ptr<Texture2D> texture) : texture(std::move(texture)) {}
 
 auto Sprite::GetSize() const -> Vector2 {
-    if (region.has_value()) {
-        return region->Size();
+    return region.has_value() ? region->Size() : TextureSize();
+}
+
+auto Sprite::GetGeometryTransform() const -> Matrix3 {
+    const auto size = GetSize();
+    const auto origin = Vector2 {-anchor.x * size.x, -anchor.y * size.y};
+
+    return Matrix3 {
+        size.x, 0.0f, origin.x,
+        0.0f, size.y, origin.y,
+        0.0f, 0.0f, 1.0f
+    };
+}
+
+auto Sprite::GetTextureTransform() const -> Matrix3 {
+    const auto texture_size = TextureSize();
+    if (texture_size.x <= 0.0f || texture_size.y <= 0.0f) {
+        return Matrix3 {1.0f};
     }
 
+    const auto r = region.value_or(Rect {0.0f, 0.0f, texture_size.x, texture_size.y});
+
+    // Images are flipped on load so V = 1 is the top of the image. Start at
+    // the region's top edge and scale V negatively so it runs downward.
+    return Matrix3 {
+        r.width / texture_size.x, 0.0f, r.x / texture_size.x,
+        0.0f, -r.height / texture_size.y, 1.0f - r.y / texture_size.y,
+        0.0f, 0.0f, 1.0f
+    };
+}
+
+auto Sprite::TextureSize() const -> Vector2 {
     if (texture == nullptr || texture->image == nullptr) {
         return Vector2 {0.0f, 0.0f};
     }

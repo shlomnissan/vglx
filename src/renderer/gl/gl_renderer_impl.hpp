@@ -38,9 +38,9 @@ namespace vglx {
 
 class Canvas;
 class CanvasRenderList;
+class Renderable2D;
 class RenderLists;
 class RenderTarget;
-class Sprite;
 
 struct alignas(16) FrameUniforms {
     Vector2 resolution {0.0f};
@@ -150,7 +150,7 @@ private:
 
     auto RenderCanvas(Canvas* canvas) -> void;
 
-    auto RenderSprite(Sprite* sprite, const Matrix3& projection) -> void;
+    auto RenderObject2D(Renderable2D* renderable, const Matrix3& projection) -> void;
 
     auto SetUniforms(
         GLProgram* program,

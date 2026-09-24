@@ -129,6 +129,7 @@ set(PUBLIC_HEADERS
     "${PUBLIC_HEADERS_DIR}/canvas/canvas.hpp"
     "${PUBLIC_HEADERS_DIR}/canvas/font.hpp"
     "${PUBLIC_HEADERS_DIR}/canvas/node2d.hpp"
+    "${PUBLIC_HEADERS_DIR}/canvas/renderable2d.hpp"
     "${PUBLIC_HEADERS_DIR}/canvas/sprite.hpp"
     "${PUBLIC_HEADERS_DIR}/core/disposable.hpp"
     "${PUBLIC_HEADERS_DIR}/core/identity.hpp"

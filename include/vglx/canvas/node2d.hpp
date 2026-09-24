@@ -56,6 +56,7 @@ public:
     enum class Type {
         Default, ///< Generic node without special behavior.
         Canvas, ///< Root of a canvas hierarchy.
+        Renderable, ///< Any node that can be drawn to the canvas.
         Sprite ///< Textured quad drawn in canvas space.
     };
 
@@ -104,8 +105,9 @@ public:
     /**
      * @brief Returns whether this node is renderable.
      *
-     * Drawable subclasses, such as sprites, override this and return `true`.
-     * The base implementation always returns `false`.
+     * Drawable nodes derive from @ref Renderable2D which overrides this and
+     * returns `true`. The renderer draws any node reporting `true` through
+     * that interface. The base implementation always returns `false`.
      */
     [[nodiscard]] virtual auto IsRenderable() const -> bool {
         return false;

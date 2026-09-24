@@ -46,6 +46,38 @@ TEST(Sprite, SizeIsZeroWithoutTexture) {
 
 #pragma endregion
 
+#pragma region Geometry
+
+TEST(Sprite, GeometryTransformAppliesSizeAndAnchor) {
+    auto sprite = vglx::Sprite::Create(make_texture(64, 32));
+    sprite->region = vglx::Rect {16.0f, 0.0f, 16.0f, 8.0f};
+    sprite->anchor = {0.5f, 0.5f};
+
+    const auto transform = sprite->GetGeometryTransform();
+
+    EXPECT_VEC3_EQ(transform * vglx::Vector3 {0.0f, 0.0f, 1.0f}, {-8.0f, -4.0f, 1.0f});
+    EXPECT_VEC3_EQ(transform * vglx::Vector3 {1.0f, 1.0f, 1.0f}, {8.0f, 4.0f, 1.0f});
+}
+
+TEST(Sprite, TextureTransformMapsRegionWithFlippedV) {
+    auto sprite = vglx::Sprite::Create(make_texture(64, 32));
+    sprite->region = vglx::Rect {16.0f, 0.0f, 16.0f, 8.0f};
+
+    const auto transform = sprite->GetTextureTransform();
+
+    EXPECT_VEC3_EQ(transform * vglx::Vector3 {0.0f, 0.0f, 1.0f}, {0.25f, 1.0f, 1.0f});
+    EXPECT_VEC3_EQ(transform * vglx::Vector3 {1.0f, 1.0f, 1.0f}, {0.5f, 0.75f, 1.0f});
+}
+
+TEST(Sprite, TransformsAreIdentityWithoutTexture) {
+    auto sprite = vglx::Sprite::Create(nullptr);
+
+    EXPECT_MAT3_EQ(sprite->GetTextureTransform(), vglx::Matrix3 {1.0f});
+    EXPECT_VEC3_EQ(sprite->GetGeometryTransform() * vglx::Vector3 {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f});
+}
+
+#pragma endregion
+
 #pragma region Node Identity
 
 TEST(Sprite, IsRenderableSpriteNode) {
