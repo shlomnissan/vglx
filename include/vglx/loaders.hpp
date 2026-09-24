@@ -187,6 +187,10 @@ struct CubeTexturePaths {
 /**
  * @brief Loads a font asset from disk.
  *
+ * Supports single-page bitmap fonts in the text `.fnt` format exported by BMFont.
+ * Pages that store glyph coverage in a color channel, such as 8-bit exports, are
+ * converted on load so coverage lives in alpha and the color is white.
+ *
  * @code
  * auto font = vglx::LoadFont("assets/fonts/futura_condensed.fnt");
  * if (font.has_value()) {

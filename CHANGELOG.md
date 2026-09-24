@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Added
 
-- 2D canvas rendering with `Canvas`, `Node2D`, and `Sprite` nodes drawn on top of the scene
+- 2D canvas rendering with `Node2D`, `Canvas`, `Sprite`, and `Text` nodes drawn on top of the scene
+- `Font` type and [BMFont](https://www.angelcode.com/products/bmfont/) asset loader loader
 - `const Get()` overloads on transforms that compute the matrix without updating the cache
 - `Rect` math type for describing rectangular regions
 - `Renderer::Viewport` for describing a viewport rectangle in framebuffer pixels

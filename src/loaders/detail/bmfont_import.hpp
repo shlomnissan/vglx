@@ -33,8 +33,12 @@ struct BMFontResult {
         float amount {0.0f};
     };
 
+    enum class Channel { Red, Green, Blue, Alpha };
+
     std::string font_face;
     fs::path page;
+
+    Channel glyph_channel {Channel::Alpha};
 
     float size {0.0f};
     float line_height {0.0f};

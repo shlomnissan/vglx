@@ -8,15 +8,37 @@
 #include "vglx/loaders.hpp"
 
 #include "vglx/canvas/font.hpp"
+#include "vglx/textures/image.hpp"
 #include "vglx/textures/texture_2d.hpp"
 
 #include "loaders/detail/bmfont_import.hpp"
 
+#include <cstdint>
 #include <format>
+#include <variant>
+#include <vector>
 
 namespace vglx {
 
 namespace {
+
+using BMFontChannel = detail::bmfont::BMFontResult::Channel;
+
+auto move_coverage_to_alpha(Image& image, BMFontChannel channel) -> void {
+    auto pixels = std::get_if<std::vector<uint8_t>>(&image.data);
+    if (pixels == nullptr) {
+        return;
+    }
+
+    const auto source = static_cast<std::size_t>(channel);
+    for (auto i = std::size_t {0}; i + 3 < pixels->size(); i += 4) {
+        const auto coverage = (*pixels)[i + source];
+        (*pixels)[i] = 255;
+        (*pixels)[i + 1] = 255;
+        (*pixels)[i + 2] = 255;
+        (*pixels)[i + 3] = coverage;
+    }
+}
 
 auto load_bmfont(const fs::path& path) -> std::expected<std::shared_ptr<Font>, std::string> {
     auto result = detail::bmfont::import(path);
@@ -27,6 +49,10 @@ auto load_bmfont(const fs::path& path) -> std::expected<std::shared_ptr<Font>, s
     auto page = LoadTexture(result->page, Texture::ColorSpace::Linear);
     if (!page.has_value()) {
         return std::unexpected(page.error());
+    }
+
+    if (result->glyph_channel != BMFontChannel::Alpha) {
+        move_coverage_to_alpha(*page.value()->image, result->glyph_channel);
     }
 
     page.value()->wrap_s = Texture::Wrapping::ClampToEdge;

@@ -7,6 +7,8 @@
 
 #include "loaders/detail/bmfont_import.hpp"
 
+#include <algorithm>
+#include <array>
 #include <charconv>
 #include <expected>
 #include <format>
@@ -33,6 +35,12 @@ struct Fields {
     std::string type;
     std::vector<Token> tokens {};
     std::optional<std::string> error {};
+
+    auto Has(std::string_view key) const -> bool {
+        return std::ranges::any_of(tokens, [key](const auto& token) {
+            return token.key == key;
+        });
+    }
 
     auto String(std::string_view key) -> std::string_view {
         for (const auto& token : tokens) {
@@ -123,6 +131,27 @@ auto parse_line(std::string_view line) -> std::expected<Fields, std::string> {
     return output;
 }
 
+auto glyph_channel(Fields& fields) -> std::optional<BMFontResult::Channel> {
+    using enum BMFontResult::Channel;
+
+    constexpr auto channels = std::array<std::pair<std::string_view, BMFontResult::Channel>, 4> {{
+        {"alphaChnl", Alpha},
+        {"redChnl", Red},
+        {"greenChnl", Green},
+        {"blueChnl", Blue}
+    }};
+
+    // BMFont describes each page channel as 0 glyph, 1 outline, 2 glyph and
+    // outline, 3 zero, or 4 one. Alpha is checked first. A page that already
+    // holds coverage there is used as-is and its color channels are left alone.
+    for (const auto& [key, channel] : channels) {
+        const auto value = fields.Int(key);
+        if (value == 0) return channel;
+    }
+
+    return std::nullopt;
+}
+
 }
 
 auto import(const fs::path& path) -> std::expected<BMFontResult, std::string> {
@@ -164,8 +193,25 @@ auto import(const fs::path& path) -> std::expected<BMFontResult, std::string> {
             seen_common = true;
             output.line_height = fields->Float("lineHeight");
             output.base = fields->Float("base");
+
             if (fields->Int("pages") > 1) {
                 return make_error("multi-page fonts are unsupported");
+            }
+
+            if (fields->Has("packed") && fields->Int("packed") != 0) {
+                return make_error("packed fonts are unsupported");
+            }
+
+            // The four channel fields are optional but always written together,
+            // so one probes for all. When present, locate the channel holding
+            // coverage. Otherwise keep the alpha default which is how every
+            // exporter that omits them lays out its pages.
+            if (fields->Has("alphaChnl")) {
+                const auto channel = glyph_channel(*fields);
+                if (!channel.has_value()) {
+                    return make_error("no page channel holds glyph data");
+                }
+                output.glyph_channel = *channel;
             }
         }
 
