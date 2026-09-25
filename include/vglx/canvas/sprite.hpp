@@ -27,8 +27,9 @@ namespace vglx {
  * Sprite draws a @ref Texture2D or a rectangular @ref region of it at the
  * node's position. The sprite's size in canvas units matches the texture or
  * region size in pixels so a sprite draws at its natural size until scaled
- * through @ref transform. The @ref anchor selects which point of the quad
- * sits at the node's position. The default is the top-left corner.
+ * through @ref transform. The @ref Renderable2D::anchor "anchor" selects
+ * which point of the quad sits at the node's position. The default is the
+ * top-left corner.
  *
  * Sprites are composited after tone mapping in display space. Load their
  * textures with @ref Texture::ColorSpace "ColorSpace::Linear" so the pixel
@@ -61,19 +62,6 @@ public:
     std::optional<Rect> region;
 
     /**
-     * @brief Normalized anchor point inside the sprite.
-     *
-     * Defines which point of the quad is placed at the node's position.
-     * Because that point sits at the origin it also acts as the pivot
-     * for rotation and scale unless @ref Transform2::pivot is set.
-     *
-     * - `(0.0, 0.0)` top-left corner of the sprite (default).
-     * - `(0.5, 0.5)` center of the sprite.
-     * - `(1.0, 1.0)` bottom-right corner of the sprite.
-     */
-    Vector2 anchor {0.0f, 0.0f};
-
-    /**
      * @brief Constructs a sprite.
      *
      * @param texture Texture to draw or `nullptr` to assign one later.
@@ -85,8 +73,7 @@ public:
      *
      * @param texture Texture to draw or `nullptr` to assign one later.
      */
-    [[nodiscard]] static auto
-    Create(std::shared_ptr<Texture2D> texture) -> std::unique_ptr<Sprite> {
+    [[nodiscard]] static auto Create(std::shared_ptr<Texture2D> texture) -> std::unique_ptr<Sprite> {
         return std::make_unique<Sprite>(std::move(texture));
     }
 
@@ -96,7 +83,7 @@ public:
      * Equals the region size when a region is set, otherwise the texture's
      * dimensions in pixels. Returns zero when there is no texture.
      */
-    [[nodiscard]] auto GetSize() const -> Vector2;
+    [[nodiscard]] auto GetSize() const -> Vector2 override;
 
     /**
      * @brief Identifies this node as @ref Node2D::Type "Node2D::Type::Sprite".

@@ -22,11 +22,10 @@ auto Sprite::GetSize() const -> Vector2 {
 
 auto Sprite::GetGeometryTransform() const -> Matrix3 {
     const auto size = GetSize();
-    const auto origin = Vector2 {-anchor.x * size.x, -anchor.y * size.y};
 
-    return Matrix3 {
-        size.x, 0.0f, origin.x,
-        0.0f, size.y, origin.y,
+    return AnchorTranslation() * Matrix3 {
+        size.x, 0.0f, 0.0f,
+        0.0f, size.y, 0.0f,
         0.0f, 0.0f, 1.0f
     };
 }
