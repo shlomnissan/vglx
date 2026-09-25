@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-25
+
 ### Added
 
 - 2D canvas rendering with `Node2D`, `Canvas`, `Sprite`, and `Text` nodes drawn on top of the scene
