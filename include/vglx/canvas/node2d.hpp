@@ -57,7 +57,8 @@ public:
         Default, ///< Generic node without special behavior.
         Canvas, ///< Root of a canvas hierarchy.
         Renderable, ///< Any node that can be drawn to the canvas.
-        Sprite ///< Textured quad drawn in canvas space.
+        Sprite, ///< Textured quad drawn in canvas space.
+        Text ///< Glyph quads laid out from a bitmap font.
     };
 
     /// @brief Local transform (position, rotation, scale, center) of this node.

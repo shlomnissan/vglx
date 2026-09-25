@@ -17,3 +17,4 @@
 #include "vglx/canvas/node2d.hpp"
 #include "vglx/canvas/renderable2d.hpp"
 #include "vglx/canvas/sprite.hpp"
+#include "vglx/canvas/text.hpp"
