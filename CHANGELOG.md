@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+### Changed
+
+- Builds and the installer default to a static library
+- Static builds explicitly propagate `VGLX_STATIC_DEFINE` to consumers
+
+### Fixed
+
+- ImGui export decorations are applied only when building a shared library
+- The exported CMake target propagates the C++23 requirement to consumers
+
 ## [0.3.0] - 2026-09-25
 
 ### Added

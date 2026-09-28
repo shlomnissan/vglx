@@ -51,20 +51,18 @@ The quickest way to get started is cloning [the starter template](https://github
  git clone https://github.com/shlomnissan/vglx-starter.git
 ```
 
-It includes a simple application wired to VGLX using CMake. You can build and run it immediately. If you prefer starting from scratch, you have two options:
-
-##### 1. Using CMake
+It includes a simple application wired to VGLX using CMake. You can also start from scratch with the following setup.
 
 If your project uses CMake, the recommended way to integrate VGLX is through `find_package`:
 
 ```cmake
-find_package(vglx REQUIRED)
+find_package(vglx CONFIG REQUIRED)
 target_link_libraries(MyApp PRIVATE vglx::vglx)
 ```
 
-CMake automatically picks the correct build configuration (Debug or Release) based on your project settings.
+CMake automatically picks the correct build configuration (Debug or Release) based on your project settings. The `vglx::vglx` target also supplies the C++23 requirement and transitive link dependencies, including the bundled GLFW and glad libraries for the OpenGL backend. Use this target instead of manually listing archive files and platform libraries.
 
-On Windows you may need to copy the VGLX DLL next to your application. You can automate this with:
+With the default static build, no separate VGLX shared library needs to accompany your application. Platform and compiler runtime requirements still apply. If you opted into a shared build, copy the VGLX DLL next to your application on Windows. You can automate this with:
 
 ```cmake
 if(WIN32)
@@ -76,39 +74,25 @@ if(WIN32)
 endif()
 ```
 
-##### 2. Compile Directly
-
-You can also link VGLX manually if you prefer using your compiler without CMake. The exact command depends on your platform and compiler. A minimal Linux example using `g++` might look like:
-
-```bash
-g++ main.cpp -o MyApp -I/usr/local/include -L/usr/local/lib -lvglx
-```
-
-Adjust include paths and library paths to match your system and compiler.
-
 ## Build From Source
 
 The project includes several presets that streamline the process:
 
-- `dev-debug` – Debug build with everything enabled
-- `dev-release` – Optimized build with examples and tools
-- `install-debug` – Debug install target (MSVC)
-- `install-release` – Release install target
+- `development` – Development build with examples, tests, and ImGui enabled
+- `install-debug` – Debug build for installation, with examples and tests disabled
+- `install-release` – Release build for installation, with examples and tests disabled
+- `benchmark` – Release build with microbenchmarks enabled
 
 ```bash [bash]
 # clone the repository
 git clone https://github.com/shlomnissan/vglx.git
 cd vglx
 
-# optional but recommended
-mkdir build
-cd build
-
 # configure with a preset
-cmake .. --preset dev-debug --config Debug
+cmake --preset development
 
 # build the engine
-cmake --build . --config Debug
+cmake --build build/development --config Debug
 ```
 
 #### Configuration Options
@@ -117,22 +101,21 @@ VGLX includes optional build components. You can enable or disable them using st
 
 | Option                | Description                              |
 | --------------------- | ---------------------------------------- |
+| `BUILD_SHARED_LIBS`   | Build a shared library (default: `OFF`). |
 | `VGLX_BUILD_DOCS`     | Build Doxygen documentation.             |
 | `VGLX_BUILD_EXAMPLES` | Build example applications.              |
 | `VGLX_BUILD_IMGUI`    | Enable ImGui support for debug UI/tools. |
 | `VGLX_BUILD_TESTS`    | Build unit tests.                        |
 
-Release presets build a shared library by default. If you prefer a static build, use:
+Builds default to a static library. To configure a shared installation build, use:
 
-```cmake
--DBUILD_SHARED_LIBS=OFF
+```bash
+cmake --preset install-release -DBUILD_SHARED_LIBS=ON
 ```
 
 #### Verifying Build
 
-If examples are enabled (default in debug presets), two executables will appear:
-`example_launcher_direct` and `example_launcher_runtime`.
-Both run the same sandbox environment and help confirm that everything is set up correctly.
+If examples are enabled (as in the `development` preset), an `example_<scene>` executable is built for each scene in `examples/scenes`. Find them under `build/development/examples`, or its configuration subdirectory when using a generator such as Visual Studio. Run an example to check rendering and input.
 
 #### Manual Installation
 
@@ -142,15 +125,14 @@ If you want full control over the installation process, you can use CMake direct
 git clone https://github.com/shlomnissan/vglx.git
 cd vglx
 
-mkdir release
-cd release
-
-cmake .. --preset install-release --config Release
-cmake --build . --config Release
-cmake --install .
+cmake --preset install-release
+cmake --build out/install-release --config Release
+cmake --install out/install-release --config Release --prefix /path/to/vglx
 ```
 
-On Windows you may need to install both Debug and Release configurations due to ABI differences.
+Replace `/path/to/vglx` with your installation directory. If it is outside CMake's standard search locations, pass `-DCMAKE_PREFIX_PATH=/path/to/vglx` when configuring your application.
+
+On Windows, install both Debug and Release configurations if your application uses both. Repeat the commands with the `install-debug` preset, `out/install-debug` build directory, and `--config Debug`, using the same installation prefix.
 
 ## Getting Help
 

@@ -23,7 +23,7 @@
         "VGLX_BUILD_IMGUI": "ON",
         "VGLX_BUILD_TESTS": "OFF",
         "VGLX_LOG_LEVEL": "3",
-        "BUILD_SHARED_LIBS": "ON"
+        "BUILD_SHARED_LIBS": "OFF"
       }
     },
     {
@@ -36,7 +36,7 @@
         "VGLX_BUILD_IMGUI": "ON",
         "VGLX_BUILD_TESTS": "OFF",
         "VGLX_LOG_LEVEL": "1",
-        "BUILD_SHARED_LIBS": "ON"
+        "BUILD_SHARED_LIBS": "OFF"
       }
     },
     {

@@ -233,6 +233,8 @@ add_library(
     ${VENDOR_SOURCES}
 )
 
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+
 # disable exceptions
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CXX_COMPILER_ID:GNU>:-fno-exceptions>
@@ -277,10 +279,12 @@ if (VGLX_BUILD_IMGUI)
 
     target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES} core/imgui_integration.hpp)
 
-    if(WIN32)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE "IMGUI_API=__declspec(dllexport)")
-    else()
-        set_source_files_properties(${IMGUI_SOURCES} PROPERTIES COMPILE_FLAGS "-fvisibility=default")
+    if (BUILD_SHARED_LIBS)
+        if(WIN32)
+            target_compile_definitions(${PROJECT_NAME} PRIVATE "IMGUI_API=__declspec(dllexport)")
+        else()
+            set_source_files_properties(${IMGUI_SOURCES} PROPERTIES COMPILE_FLAGS "-fvisibility=default")
+        endif()
     endif()
 
     target_include_directories(${PROJECT_NAME} PRIVATE
@@ -306,6 +310,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
+
+if (NOT BUILD_SHARED_LIBS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC VGLX_STATIC_DEFINE)
+endif()
 
 configure_file(
     ${CMAKE_SOURCE_DIR}/cmake/version.hpp.in

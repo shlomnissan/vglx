@@ -35,7 +35,7 @@ def configuration_options(os_name: str):
 
     build_shared = ask_choice(
         "\nLibrary target:",
-        ["Shared library (recommended)", "Static library"]
+        ["Static library (recommended)", "Shared library"]
     ).startswith("Shared")
 
     print("\nAdditional components to install with VGLX:")

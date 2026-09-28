@@ -26,25 +26,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(hello-vglx main.cpp)
 
-find_package(vglx REQUIRED)
+find_package(vglx CONFIG REQUIRED)
 
 target_link_libraries(hello-vglx PRIVATE vglx::vglx)
-
-if (WIN32)
-    add_custom_command(TARGET hello-vglx POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:vglx::vglx>
-        $<TARGET_FILE_DIR:hello-vglx>
-    )
-endif()
 ```
 
 The file starts by declaring the minimum CMake version, the project name and the language standard. We then create an executable and give it a single source file.
 
-If you followed the installation guide you can import VGLX with two commands. `find_package(vglx REQUIRED)` asks CMake to locate the library. If it is missing or incorrectly installed, configuration fails. `target_link_libraries` links our application to the VGLX binaries.
+If you followed the installation guide you can import VGLX with two commands. `find_package(vglx CONFIG REQUIRED)` asks CMake to locate the library. If it is missing or incorrectly installed, configuration fails. `target_link_libraries` links our application to the VGLX binaries.
 
-The Windows-only section copies the VGLX DLL next to the executable after the build step. CMake selects the correct binary automatically based on your build type. Without this the application
-may fail to launch on Windows unless you add the binaries to your system path.
+With the default static build, no separate VGLX shared library needs to accompany your application. Platform and compiler runtime requirements still apply. If you installed a shared build, see the [installation guide](/manual/installation) for runtime setup.
 
 This setup looks simple but CMake is doing a lot behind the scenes. It verifies the installation, loads the correct configuration and handles platform-specific details for us.
 
