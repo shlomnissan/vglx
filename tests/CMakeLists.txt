@@ -18,8 +18,8 @@ file(GLOB TEST_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/**/*.cpp
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 
 add_executable(run_unit_tests ${TEST_SOURCES} test_helpers.hpp)

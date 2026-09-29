@@ -16,7 +16,7 @@ from .helpers import (
     default_install_prefix
 )
 
-MIN_CMAKE_VERSION = "3.20.0"
+MIN_CMAKE_VERSION = "3.25.0"
 
 def configuration_options(os_name: str):
     default_prefix = default_install_prefix(os_name)

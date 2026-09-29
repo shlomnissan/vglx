@@ -19,8 +19,8 @@ file(GLOB BENCHMARK_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/*.cpp
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 
 add_executable(run_benchmarks ${BENCHMARK_SOURCES})

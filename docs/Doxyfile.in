@@ -2,15 +2,14 @@
 
 PROJECT_NAME           = @PROJECT_NAME@
 PROJECT_NUMBER         = @PROJECT_VERSION@
-OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@/docs
-INPUT                  = @CMAKE_SOURCE_DIR@/include
+OUTPUT_DIRECTORY       = "@CMAKE_CURRENT_BINARY_DIR@/docs"
+INPUT                  = "@PROJECT_SOURCE_DIR@/include"
 MARKDOWN_SUPPORT       = NO
 RECURSIVE              = YES
 GENERATE_LATEX         = NO
 GENERATE_HTML          = NO
 GENERATE_XML           = YES
 XML_OUTPUT             = xml
-GENERATE_TAGFILE       = xml/project.tag
 HAVE_DOT               = NO
 EXTRACT_PRIVATE        = YES
 EXTRACT_STATIC         = YES

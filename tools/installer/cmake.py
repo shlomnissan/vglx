@@ -13,7 +13,7 @@ def get_cmake_version():
     if not cmake_path:
         make_error(
             "CMake was not found on your PATH.",
-            "Please install CMake 3.20 or newer and try again."
+            "Please install CMake 3.25 or newer and try again."
         )
 
     output = subprocess.run(

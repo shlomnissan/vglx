@@ -1,5 +1,5 @@
-set(PUBLIC_HEADERS_DIR ${CMAKE_SOURCE_DIR}/include/vglx)
-set(VENDOR_DIR ${CMAKE_SOURCE_DIR}/vendor)
+set(PUBLIC_HEADERS_DIR ${PROJECT_SOURCE_DIR}/include/vglx)
+set(VENDOR_DIR ${PROJECT_SOURCE_DIR}/vendor)
 
 set(SOURCE_CODE
     "cameras/camera.cpp"
@@ -223,7 +223,7 @@ set(HEADER_BUNDLES
     "${PUBLIC_HEADERS_DIR}/vglx.hpp"
 )
 
-include(ShaderProcessor)
+include("${PROJECT_SOURCE_DIR}/cmake/ShaderProcessor.cmake")
 
 add_library(
     ${PROJECT_NAME}
@@ -232,6 +232,8 @@ add_library(
     ${SOURCE_CODE}
     ${VENDOR_SOURCES}
 )
+
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
@@ -244,14 +246,14 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${VENDOR_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE)
@@ -303,6 +305,9 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_LOG_LEVEL=${vglx_log_level})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
+    CXX_EXTENSIONS OFF
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
     POSITION_INDEPENDENT_CODE ON
     VERSION ${vglx_VERSION_MAJOR}.${vglx_VERSION_MINOR}.${vglx_VERSION_PATCH}
     SOVERSION ${vglx_VERSION_MAJOR}
@@ -316,10 +321,14 @@ if (NOT BUILD_SHARED_LIBS)
 endif()
 
 configure_file(
-    ${CMAKE_SOURCE_DIR}/cmake/version.hpp.in
+    ${PROJECT_SOURCE_DIR}/cmake/version.hpp.in
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/version.hpp
     @ONLY
 )
+
+if (NOT VGLX_INSTALL)
+    return()
+endif()
 
 include(CMakePackageConfigHelpers)
 
@@ -331,7 +340,7 @@ write_basic_package_version_file(
 
 set(CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/Config.cmake.in
+    ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
     INSTALL_DESTINATION ${CONFIG_INSTALL_DIR}
 )

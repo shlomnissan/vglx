@@ -4,7 +4,7 @@ This page covers how to build VGLX, install it, and use it in your own project. 
 
 ## Requirements
 
-VGLX builds with a C++23-capable toolchain, [CMake](https://cmake.org/) 3.20 or newer, and an OpenGL 4.1+ context. It is regularly tested on the major platforms:
+VGLX builds with a C++23-capable toolchain, [CMake](https://cmake.org/) 3.25 or newer, and an OpenGL 4.1+ context. It is regularly tested on the major platforms:
 
 <div class="system-list">
 

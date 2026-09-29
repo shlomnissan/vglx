@@ -6,8 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+### Added
+
+- `vglx::vglx` alias target and support for consuming VGLX with `add_subdirectory` or `FetchContent`
+- `VGLX_INSTALL` option controlling install rules and the CMake package
+
 ### Changed
 
+- CMake 3.25 or newer is required
+- Examples, tests, and ImGui are built by default only when VGLX is the top-level project
 - Builds and the installer default to a static library
 - Static builds explicitly propagate `VGLX_STATIC_DEFINE` to consumers
 
