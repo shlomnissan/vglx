@@ -5,38 +5,24 @@
       "name": "development",
       "binaryDir": "${sourceDir}/build/development",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "VGLX_BUILD_DOCS": "OFF",
-        "VGLX_BUILD_EXAMPLES": "ON",
-        "VGLX_BUILD_IMGUI": "ON",
-        "VGLX_BUILD_TESTS": "ON",
-        "BUILD_SHARED_LIBS": "OFF"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "install-debug",
-      "binaryDir": "${sourceDir}/out/install-debug",
+      "name": "development-release",
+      "inherits": "development",
+      "binaryDir": "${sourceDir}/build/development-release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "VGLX_BUILD_DOCS": "OFF",
-        "VGLX_BUILD_EXAMPLES": "OFF",
-        "VGLX_BUILD_IMGUI": "ON",
-        "VGLX_BUILD_TESTS": "OFF",
-        "VGLX_LOG_LEVEL": "3",
-        "BUILD_SHARED_LIBS": "OFF"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "install-release",
-      "binaryDir": "${sourceDir}/out/install-release",
+      "name": "install",
+      "binaryDir": "${sourceDir}/out/install",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "VGLX_BUILD_DOCS": "OFF",
         "VGLX_BUILD_EXAMPLES": "OFF",
-        "VGLX_BUILD_IMGUI": "ON",
-        "VGLX_BUILD_TESTS": "OFF",
-        "VGLX_LOG_LEVEL": "1",
-        "BUILD_SHARED_LIBS": "OFF"
+        "VGLX_BUILD_TESTS": "OFF"
       }
     },
     {
@@ -44,26 +30,10 @@
       "binaryDir": "${sourceDir}/build/benchmark",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "VGLX_BUILD_DOCS": "OFF",
         "VGLX_BUILD_EXAMPLES": "OFF",
-        "VGLX_BUILD_IMGUI": "ON",
         "VGLX_BUILD_TESTS": "OFF",
-        "VGLX_BUILD_BENCHMARKS": "ON",
-        "VGLX_LOG_LEVEL": "1",
-        "BUILD_SHARED_LIBS": "OFF"
+        "VGLX_BUILD_BENCHMARKS": "ON"
       }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "development-debug",
-      "configurePreset": "development",
-      "configuration": "Debug"
-    },
-    {
-      "name": "development-release",
-      "configurePreset": "development",
-      "configuration": "Release"
     }
   ]
 }

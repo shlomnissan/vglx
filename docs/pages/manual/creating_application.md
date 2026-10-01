@@ -17,27 +17,34 @@ VGLX works best with [CMake](https://cmake.org/). In this section we create a sm
 `CMakeLists.txt` holds a small build configuration:
 
 ```cmake
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 
 project(hello-vglx)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(hello-vglx main.cpp)
+include(FetchContent)
+FetchContent_Declare(
+    vglx
+    GIT_REPOSITORY https://github.com/shlomnissan/vglx.git
+    GIT_TAG        v0.4.0
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(vglx)
 
-find_package(vglx CONFIG REQUIRED)
+add_executable(hello-vglx main.cpp)
 
 target_link_libraries(hello-vglx PRIVATE vglx::vglx)
 ```
 
-The file starts by declaring the minimum CMake version, the project name and the language standard. We then create an executable and give it a single source file.
+The file starts by declaring the minimum CMake version, the project name and the language standard. The `FetchContent` block then declares where VGLX comes from and which release to use. On the first configure CMake downloads that release and adds it to the build, so the engine compiles alongside your application and nothing needs to be installed on your system. We then create an executable and give it a single source file.
 
-If you followed the installation guide you can import VGLX with two commands. `find_package(vglx CONFIG REQUIRED)` asks CMake to locate the library. If it is missing or incorrectly installed, configuration fails. `target_link_libraries` links our application to the VGLX binaries.
+`target_link_libraries` links our application to the `vglx::vglx` target. The target carries everything a consumer needs: the include paths, the C++23 requirement, and VGLX's own dependencies. If you installed VGLX system-wide instead, replace the `FetchContent` block with `find_package(vglx CONFIG REQUIRED)` and the rest of the file stays the same.
 
-With the default static build, no separate VGLX shared library needs to accompany your application. Platform and compiler runtime requirements still apply. If you installed a shared build, see the [installation guide](/manual/installation) for runtime setup.
+VGLX is built as a static library, so no runtime files need to accompany your application. Platform and compiler runtime requirements still apply.
 
-This setup looks simple but CMake is doing a lot behind the scenes. It verifies the installation, loads the correct configuration and handles platform-specific details for us.
+This setup looks simple but CMake is doing a lot behind the scenes. It downloads and builds the engine, applies the right configuration and handles platform-specific details for us.
 
 Before we move on, let’s add a minimal `main.cpp` to test that the project builds correctly:
 

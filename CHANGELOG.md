@@ -15,8 +15,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - CMake 3.25 or newer is required
 - Examples, tests, and ImGui are built by default only when VGLX is the top-level project
-- Builds and the installer default to a static library
+- `install-debug` and `install-release` presets merged into a single `install` preset
+- Builds default to a static library
 - Static builds explicitly propagate `VGLX_STATIC_DEFINE` to consumers
+
+### Removed
+
+- Python installer, replaced by `FetchContent` integration and the `install` preset
 
 ### Fixed
 

@@ -1,6 +1,6 @@
 # Installation
 
-This page covers how to build VGLX, install it, and use it in your own project. The goal is to keep the setup simple. All dependencies are included in the repository, and you do not need anything system-wide beyond a C++ compiler, CMake and an OpenGL driver.
+This page covers how to add VGLX to your project, how to install it system-wide if you prefer, and how to build the engine itself. The goal is to keep the setup simple. All of VGLX's dependencies are included in its repository and you do not need anything beyond a C++ compiler, CMake and an OpenGL driver.
 
 ## Requirements
 
@@ -16,7 +16,7 @@ VGLX builds with a C++23-capable toolchain, [CMake](https://cmake.org/) 3.25 or 
 
 #### Dependencies
 
-VGLX vendors all of its dependencies directly inside the repository. Nothing is downloaded at build time, and no external package managers are required. The runtime pieces are:
+VGLX vendors all of its dependencies directly inside the repository. Nothing is downloaded at build time and no external package managers are required. The runtime pieces are:
 
 | Dependency                                | Version | Location       | Description                                                                         |
 | ----------------------------------------- | ------- | -------------- | ----------------------------------------------------------------------------------- |
@@ -26,43 +26,73 @@ VGLX vendors all of its dependencies directly inside the repository. Nothing is 
 
 Each dependency includes its license inside the `vendor/` directory.
 
-## VGLX Installer
+## Adding VGLX to Your Project
 
-The easiest way to install VGLX is using the Python installer included in the repository. It guides you through the process and builds the engine using the right presets for your system.
+The recommended way to use VGLX is to let CMake pull it into your project with `FetchContent`. Nothing needs to be installed on your system: the first configure downloads the pinned release and builds it alongside your application.
+
+```cmake
+include(FetchContent)
+
+FetchContent_Declare(
+    vglx
+    GIT_REPOSITORY https://github.com/shlomnissan/vglx.git
+    GIT_TAG v0.4.0
+    GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(vglx)
+
+target_link_libraries(MyApp PRIVATE vglx::vglx)
+```
+
+The `vglx::vglx` target supplies the include paths and VGLX's own dependencies, including the bundled GLFW and glad libraries for the OpenGL backend. Use this target instead of listing archive files and platform libraries yourself.
+
+A few things to know about this setup:
+
+- Your machine needs CMake 3.25 or newer regardless of the minimum version your own project declares because VGLX's build files run as part of your configure.
+- When VGLX is built this way it compiles only the library. Its examples, tests and ImGui integration are off by default. To enable ImGui, set `VGLX_BUILD_IMGUI` before `FetchContent_MakeAvailable`:
+
+  ```cmake
+  set(VGLX_BUILD_IMGUI ON)
+  ```
+
+The quickest way to start is cloning [the starter template](https://github.com/shlomnissan/vglx-starter) which includes this setup:
+
+```bash
+ git clone https://github.com/shlomnissan/vglx-starter.git
+```
+
+## Installing VGLX System-Wide
+
+If you work on several VGLX projects and would rather not build the engine in each of them, you can install it once and link against the installed copy. The repository includes an `install` preset that configures a release build of the library alone:
 
 ```bash
 # clone the repository
 git clone https://github.com/shlomnissan/vglx.git
 cd vglx
 
-# run the installer
-python3 -m tools.installer.main
+# configure and build the library
+cmake --preset install
+cmake --build out/install --config Release
+
+# install it
+cmake --install out/install --config Release --prefix /path/to/vglx
 ```
 
-The installer checks for a working version of CMake, detects your compiler and asks for an installation prefix.
+Replace `/path/to/vglx` with your installation directory or omit `--prefix` to install to the platform default, which may require administrator privileges. On Windows, the Visual Studio generator builds every configuration from the same directory, so run the build and install commands again with `--config Debug` to make both configurations available.
 
-If you encounter issues, see the [Getting Help](#getting-help) section below.
-
-## Creating a New Project
-
-The quickest way to get started is cloning [the starter template](https://github.com/shlomnissan/vglx-starter):
-
-```bash
- git clone https://github.com/shlomnissan/vglx-starter.git
-```
-
-It includes a simple application wired to VGLX using CMake. You can also start from scratch with the following setup.
-
-If your project uses CMake, the recommended way to integrate VGLX is through `find_package`:
+In your project, locate the installed copy with `find_package`:
 
 ```cmake
 find_package(vglx CONFIG REQUIRED)
 target_link_libraries(MyApp PRIVATE vglx::vglx)
 ```
 
-CMake automatically picks the correct build configuration (Debug or Release) based on your project settings. The `vglx::vglx` target also supplies the C++23 requirement and transitive link dependencies, including the bundled GLFW and glad libraries for the OpenGL backend. Use this target instead of manually listing archive files and platform libraries.
+If the installation directory is outside CMake's standard search locations, pass `-DCMAKE_PREFIX_PATH=/path/to/vglx` when configuring your project. CMake picks the correct build configuration (Debug or Release) based on your project settings.
 
-With the default static build, no separate VGLX shared library needs to accompany your application. Platform and compiler runtime requirements still apply. If you opted into a shared build, copy the VGLX DLL next to your application on Windows. You can automate this with:
+#### Shared Library Builds
+
+VGLX is built as a static library by default so no separate library needs to accompany your application. If you opted into a shared build with `-DBUILD_SHARED_LIBS=ON` copy the VGLX DLL next to your application on Windows. You can automate this with:
 
 ```cmake
 if(WIN32)
@@ -76,11 +106,11 @@ endif()
 
 ## Build From Source
 
-The project includes several presets that streamline the process:
+To work on the engine itself, use the development preset. The project includes several presets that streamline the process:
 
-- `development` – Development build with examples, tests, and ImGui enabled
-- `install-debug` – Debug build for installation, with examples and tests disabled
-- `install-release` – Release build for installation, with examples and tests disabled
+- `development` – Debug build with examples, tests, and ImGui enabled
+- `development-release` – The same with optimizations, for measuring performance
+- `install` – Release build of the library alone, for installation
 - `benchmark` – Release build with microbenchmarks enabled
 
 ```bash [bash]
@@ -97,42 +127,22 @@ cmake --build build/development --config Debug
 
 #### Configuration Options
 
-VGLX includes optional build components. You can enable or disable them using standard CMake flags:
+VGLX includes optional components. You can enable or disable them using CMake flags:
 
-| Option                | Description                              |
-| --------------------- | ---------------------------------------- |
-| `BUILD_SHARED_LIBS`   | Build a shared library (default: `OFF`). |
-| `VGLX_BUILD_DOCS`     | Build Doxygen documentation.             |
-| `VGLX_BUILD_EXAMPLES` | Build example applications.              |
-| `VGLX_BUILD_IMGUI`    | Enable ImGui support for debug UI/tools. |
-| `VGLX_BUILD_TESTS`    | Build unit tests.                        |
+| Option                | Description                                                                 |
+| --------------------- | --------------------------------------------------------------------------- |
+| `BUILD_SHARED_LIBS`   | Build a shared library (default: `OFF`).                                    |
+| `VGLX_BUILD_DOCS`     | Build Doxygen documentation.                                                |
+| `VGLX_BUILD_EXAMPLES` | Build example applications.                                                 |
+| `VGLX_BUILD_IMGUI`    | Enable ImGui support for debug UI/tools.                                    |
+| `VGLX_BUILD_TESTS`    | Build unit tests.                                                           |
+| `VGLX_INSTALL`        | Generate install rules and the CMake package. |
 
-Builds default to a static library. To configure a shared installation build, use:
-
-```bash
-cmake --preset install-release -DBUILD_SHARED_LIBS=ON
-```
+Examples, tests and ImGui are enabled by default only when VGLX is the top-level project.
 
 #### Verifying Build
 
-If examples are enabled (as in the `development` preset), an `example_<scene>` executable is built for each scene in `examples/scenes`. Find them under `build/development/examples`, or its configuration subdirectory when using a generator such as Visual Studio. Run an example to check rendering and input.
-
-#### Manual Installation
-
-If you want full control over the installation process, you can use CMake directly:
-
-```bash
-git clone https://github.com/shlomnissan/vglx.git
-cd vglx
-
-cmake --preset install-release
-cmake --build out/install-release --config Release
-cmake --install out/install-release --config Release --prefix /path/to/vglx
-```
-
-Replace `/path/to/vglx` with your installation directory. If it is outside CMake's standard search locations, pass `-DCMAKE_PREFIX_PATH=/path/to/vglx` when configuring your application.
-
-On Windows, install both Debug and Release configurations if your application uses both. Repeat the commands with the `install-debug` preset, `out/install-debug` build directory, and `--config Debug`, using the same installation prefix.
+If examples are enabled (as in the `development` preset) an `example_<scene>` executable is built for each scene in `examples/scenes`. Run an example to check rendering and input.
 
 ## Getting Help
 
@@ -141,7 +151,5 @@ If you run into issues, please [open an issue on GitHub](https://github.com/shlo
 ```text
 - Your OS and compiler version
 - CMake command you ran
-- Installer or compiler logs
+- CMake or compiler logs
 ```
-
-If you discover a fix, you are encouraged to open a PR with updates to this document so the whole community benefits.

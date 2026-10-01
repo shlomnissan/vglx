@@ -20,7 +20,7 @@
 
 ## Overview
 
-VGLX is a rendering engine for modern C++ focused on immediacy and control. It uses a familiar scene-graph built from objects, meshes, cameras, and lights with native performance and explicit GPU access. The engine is fully cross-platform and runs on Windows, macOS, and Linux.
+VGLX is a cross-platform rendering engine for modern C++, combining a scene graph with native performance and direct GPU control. The engine is fully cross-platform and runs on Windows, macOS, and Linux.
 
 #### Documentation
 
@@ -28,20 +28,26 @@ VGLX is a rendering engine for modern C++ focused on immediacy and control. It u
 - API reference: https://www.vglx.org/reference/
 - Starter template: https://github.com/shlomnissan/vglx-starter
 
-## Installation
+## Getting Started
 
-The easiest way to install VGLX is with the Python installer included in the repository. It guides the process and builds the engine using the correct presets for your system.
+VGLX needs a C++23 compiler and CMake 3.25 or newer. The quickest way to use it is to let CMake pull it into your project with `FetchContent`:
 
-```bash
-# clone the repository
-git clone https://github.com/shlomnissan/vglx.git
-cd vglx
+```cmake
+include(FetchContent)
 
-# run the installer
-python3 -m tools.installer.main
+FetchContent_Declare(
+    vglx
+    GIT_REPOSITORY https://github.com/shlomnissan/vglx.git
+    GIT_TAG v0.4.0
+    GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(vglx)
+
+target_link_libraries(MyApp PRIVATE vglx::vglx)
 ```
 
-The installer checks for CMake, detects your compiler, and asks for an installation prefix.
+The first configure downloads VGLX and builds it as part of your project. The [starter template](https://github.com/shlomnissan/vglx-starter) is a ready-made project set up this way. To install VGLX system-wide instead, see the [installation guide](https://www.vglx.org/manual/installation).
 
 ## Versioning
 
@@ -121,7 +127,7 @@ If you run into problems, please [open an issue on GitHub](https://github.com/sh
 
 - Your OS and compiler version
 - CMake command you ran
-- Installer or compiler logs
+- CMake or compiler logs
 
 ## License
 ```
