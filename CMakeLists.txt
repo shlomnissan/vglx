@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(vglx VERSION 0.3.0)
+project(vglx VERSION 0.4.0)
 
 if (PROJECT_IS_TOP_LEVEL)
     set(CMAKE_CXX_STANDARD 23)
