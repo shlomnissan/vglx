@@ -2,14 +2,14 @@ name: Ubuntu
 on: [push]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: Install dependencies
         run: |
           sudo apt-get -yq update
-          sudo apt-get install -yq cmake ninja-build libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config g++-14
-          gcc --version
+          sudo apt-get install -yq libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+          g++-14 --version
       - name: Configure
         shell: bash
         env:

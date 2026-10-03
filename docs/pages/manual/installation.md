@@ -4,15 +4,17 @@ This page covers how to add VGLX to your project, how to install it system-wide 
 
 ## Requirements
 
-VGLX builds with a C++23-capable toolchain, [CMake](https://cmake.org/) 3.25 or newer, and an OpenGL 4.1+ context. It is regularly tested on the major platforms:
+VGLX builds with a C++23-capable toolchain, [CMake](https://cmake.org/) 3.25 or newer, and an OpenGL 4.1+ context. Every push is built and tested on:
 
 <div class="system-list">
 
-- ![Ubuntu](https://raw.githubusercontent.com/EgoistDeveloper/operating-system-logos/master/src/16x16/UBT.png) Ubuntu 24.04 (GCC 11.3.0)
-- ![macOS](https://raw.githubusercontent.com/EgoistDeveloper/operating-system-logos/master/src/16x16/MAC.png) macOS 14 (Clang 15.0.0)
-- ![Windows](https://raw.githubusercontent.com/EgoistDeveloper/operating-system-logos/master/src/16x16/WIN.png) Windows 10 and MSVC 19.44
+- ![Ubuntu](https://raw.githubusercontent.com/EgoistDeveloper/operating-system-logos/master/src/16x16/UBT.png) Ubuntu 24.04 (GCC 14)
+- ![macOS](https://raw.githubusercontent.com/EgoistDeveloper/operating-system-logos/master/src/16x16/MAC.png) macOS 26 (Xcode 26, Apple Clang 17)
+- ![Windows](https://raw.githubusercontent.com/EgoistDeveloper/operating-system-logos/master/src/16x16/WIN.png) Windows Server 2025 (Visual Studio 2022, MSVC 19.44)
 
 </div>
+
+Older toolchains may work as long as they support the C++23 features VGLX relies on, in particular `std::expected` and `std::print`.
 
 #### Dependencies
 

@@ -2,12 +2,9 @@ name: Windows
 on: [push]
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: |
-          choco install cmake
+      - uses: actions/checkout@v7
       - name: Configure
         shell: bash
         run: |
