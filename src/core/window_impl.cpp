@@ -57,6 +57,13 @@ auto glfw_window_content_scale_callback(GLFWwindow*, float x, float y) -> void;
 Window::Impl::Impl(const Window::Parameters& params) : params_(params) {}
 
 auto Window::Impl::Initialize() -> std::expected<void, std::string> {
+#ifdef VGLX_RENDERER_VULKAN
+    if (volkInitialize() != VK_SUCCESS) {
+        return std::unexpected("Failed to load the Vulkan loader");
+    }
+    glfwInitVulkanLoader(vkGetInstanceProcAddr);
+#endif
+
     if (!glfwInit()) {
         return std::unexpected("Failed to initialize GLFW " + glfw_get_error());
     }

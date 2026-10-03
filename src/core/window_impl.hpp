@@ -12,6 +12,10 @@
 #include <expected>
 #include <string>
 
+#ifdef VGLX_RENDERER_VULKAN
+#include <volk.h>
+#endif
+
 #include <GLFW/glfw3.h>
 
 #include "vglx/math/vector2.hpp"

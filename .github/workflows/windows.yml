@@ -18,3 +18,9 @@ jobs:
         run: |
           cd build
           ctest -V -C Debug
+      - name: Configure (Vulkan)
+        shell: bash
+        run: cmake -B build-vulkan --preset="development" -D VGLX_EXPERIMENTAL_VULKAN=ON
+      - name: Build (Vulkan)
+        shell: bash
+        run: cmake --build build-vulkan --config Debug

@@ -51,3 +51,24 @@ Collection of single-file libraries used in VGLX components.
   * Upstream: https://github.com/tinyobjloader/tinyobjloader
   * Version: 2.0.0
   * License: MIT
+
+
+## volk
+
+- Upstream: https://github.com/zeux/volk
+- Version: 1.4.350
+- License: MIT
+
+Meta-loader that loads the Vulkan loader at runtime. Used only by the
+experimental Vulkan backend, where it replaces linking against the
+Vulkan SDK.
+
+
+## vulkan-headers
+
+- Upstream: https://github.com/KhronosGroup/Vulkan-Headers
+- Version: v1.4.350
+- License: Apache-2.0 / MIT
+
+Only the C headers under `include/` are vendored. The C++ bindings and the
+registry are omitted. Used only by the experimental Vulkan backend.

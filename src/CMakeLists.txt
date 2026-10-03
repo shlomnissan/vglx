@@ -84,6 +84,7 @@ set(SOURCE_CODE
 set(VULKAN_SOURCES
     "renderer/vulkan/vk_renderer_impl.cpp"
     "renderer/vulkan/vk_renderer_impl.hpp"
+    "${VENDOR_DIR}/volk/volk.c"
 )
 
 set(GL_SOURCES
@@ -259,10 +260,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE)
 
 if (VGLX_EXPERIMENTAL_VULKAN)
-    find_package(Vulkan REQUIRED)
     target_sources(${PROJECT_NAME} PRIVATE ${VULKAN_SOURCES})
-    target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan glfw)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_VULKAN)
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        $<BUILD_INTERFACE:${VENDOR_DIR}/vulkan-headers/include>
+        $<BUILD_INTERFACE:${VENDOR_DIR}/volk>
+    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw ${CMAKE_DL_LIBS})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_VULKAN VK_NO_PROTOTYPES)
 else()
     target_sources(${PROJECT_NAME} PRIVATE ${GL_SOURCES})
     target_link_libraries(${PROJECT_NAME} PRIVATE glad glfw)
@@ -306,6 +310,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_LOG_LEVEL=${vglx_log_lev
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_EXTENSIONS OFF
+    C_VISIBILITY_PRESET hidden
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN ON
     POSITION_INDEPENDENT_CODE ON

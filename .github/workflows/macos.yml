@@ -23,6 +23,12 @@ jobs:
         run: |
           cd ${{github.workspace}}/build
           ctest -V
+      - name: Configure (Vulkan)
+        shell: bash
+        run: cmake -B ${{github.workspace}}/build-vulkan --preset="development" -G "Ninja" -D VGLX_EXPERIMENTAL_VULKAN=ON
+      - name: Build (Vulkan)
+        shell: bash
+        run: cmake --build ${{github.workspace}}/build-vulkan
       - name: Generate Documentation
         shell: bash
         run: ${{github.workspace}}/scripts/gendocs.sh
