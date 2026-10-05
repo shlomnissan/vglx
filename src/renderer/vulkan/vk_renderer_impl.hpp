@@ -10,6 +10,8 @@
 #include "vglx/core/renderer.hpp"
 #include "vglx/core/window.hpp"
 
+#include "renderer/vulkan/vk_driver.hpp"
+
 #include <expected>
 #include <string>
 
@@ -58,6 +60,15 @@ public:
     ~Impl();
 
 private:
+    Renderer::Parameters params_;
+
+    Window::Impl* window_ {nullptr};
+
+    VulkanInstance instance_;
+    VulkanDevice device_;
+
+    VkSurfaceKHR surface_ {VK_NULL_HANDLE};
+
     Renderer::Limits limits_;
     Renderer::DriverInfo info_;
 };

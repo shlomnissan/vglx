@@ -7,12 +7,45 @@
 
 #include "renderer/vulkan/vk_renderer_impl.hpp"
 
+#include "core/window_impl.hpp"
 
 namespace vglx {
 
-Renderer::Impl::Impl(const Renderer::Parameters& params) {}
+Renderer::Impl::Impl(const Renderer::Parameters& params) : params_(params) {}
 
 auto Renderer::Impl::Initialize(Window::Impl& window) -> std::expected<void, std::string> {
+    if (window_ != nullptr) {
+        return std::unexpected("Vulkan renderer is already initialized");
+    }
+
+    const auto extensions = window.GetRequiredVulkanExtensions();
+    if (!extensions) {
+        return std::unexpected(extensions.error());
+    }
+
+    auto instance = vk_create_instance(*extensions);
+    if (!instance) {
+        return std::unexpected(instance.error());
+    }
+
+    auto surface = window.CreateVulkanSurface(instance->handle);
+    if (!surface) {
+        vk_destroy_instance(*instance);
+        return std::unexpected(surface.error());
+    }
+
+    auto device = vk_create_device(instance->handle, *surface);
+    if (!device) {
+        vk_destroy_surface(instance->handle, *surface);
+        vk_destroy_instance(*instance);
+        return std::unexpected(device.error());
+    }
+
+    instance_ = *instance;
+    surface_ = *surface;
+    device_ = *device;
+    window_ = &window;
+
     return {};
 }
 
@@ -32,6 +65,10 @@ auto Renderer::Impl::SetExposure(float exposure) -> void {}
 
 auto Renderer::Impl::SetShadowMap(ShadowMap shadow_map) -> void {}
 
-Renderer::Impl::~Impl() = default;
+Renderer::Impl::~Impl() {
+    if (device_.handle != VK_NULL_HANDLE) vk_destroy_device(device_);
+    if (surface_ != VK_NULL_HANDLE) vk_destroy_surface(instance_.handle, surface_);
+    if (instance_.handle != VK_NULL_HANDLE) vk_destroy_instance(instance_);
+}
 
 }
