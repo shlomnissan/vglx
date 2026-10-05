@@ -53,6 +53,16 @@ Collection of single-file libraries used in VGLX components.
   * License: MIT
 
 
+## vma
+
+- Upstream: https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+- Version: 3.4.0
+- License: MIT
+
+Single-header Vulkan memory allocator. Only `include/vk_mem_alloc.h` is
+vendored. Used only by the experimental Vulkan backend.
+
+
 ## volk
 
 - Upstream: https://github.com/zeux/volk

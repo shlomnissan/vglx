@@ -265,6 +265,7 @@ if (VGLX_EXPERIMENTAL_VULKAN)
         $<BUILD_INTERFACE:${VENDOR_DIR}/vulkan-headers/include>
         $<BUILD_INTERFACE:${VENDOR_DIR}/volk>
     )
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE $<BUILD_INTERFACE:${VENDOR_DIR}/vma>)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw ${CMAKE_DL_LIBS})
     target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_VULKAN VK_NO_PROTOTYPES VOLK_NAMESPACE)
 

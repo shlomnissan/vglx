@@ -25,12 +25,13 @@ VGLX vendors all of its dependencies directly inside the repository. Nothing is 
 | [Glad](https://glad.dav1d.de/)            | 0.1.36  | `vendor/glad`  | OpenGL function loader generated from [glad.dav1d.de](https://glad.dav1d.de/).      |
 | [GLFW](https://glfw.org/)                 | 3.5.0   | `vendor/glfw`  | Cross-platform window/input/context management (with minor internal modifications). |
 | [ImGui](https://github.com/ocornut/imgui) | 1.92.1  | `vendor/imgui` | **Optional** immediate-mode UI library for in-engine tools and examples.            |
+| [VMA](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator) | 3.4.0 | `vendor/vma` | Vulkan memory allocator. Used only by the experimental Vulkan backend. |
 | [volk](https://github.com/zeux/volk)      | 1.4.350 | `vendor/volk`  | Vulkan meta-loader. Used only by the experimental Vulkan backend.                   |
 | [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) | 1.4.350 | `vendor/vulkan-headers` | Vulkan API headers. Used only by the experimental Vulkan backend. |
 
 Each dependency includes its license inside the `vendor/` directory.
 
-On Apple platforms the experimental Vulkan backend additionally downloads [MoltenVK](https://github.com/KhronosGroup/MoltenVK) 1.4.2 at configure time and links it into VGLX, so applications run without a Vulkan loader installed. This is controlled by `VGLX_STATIC_MOLTENVK`.
+On Apple platforms the experimental Vulkan backend additionally downloads [MoltenVK](https://github.com/KhronosGroup/MoltenVK) 1.4.2 at configure time and links it into VGLX so applications run without a Vulkan loader installed. This is controlled by `VGLX_STATIC_MOLTENVK`.
 
 ## Adding VGLX to Your Project
 
