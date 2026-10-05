@@ -30,20 +30,20 @@ VGLX vendors all of its dependencies directly inside the repository. Nothing is 
 
 Each dependency includes its license inside the `vendor/` directory.
 
+On Apple platforms the experimental Vulkan backend additionally downloads [MoltenVK](https://github.com/KhronosGroup/MoltenVK) 1.4.2 at configure time and links it into VGLX, so applications run without a Vulkan loader installed. This is controlled by `VGLX_STATIC_MOLTENVK`.
+
 ## Adding VGLX to Your Project
 
 The recommended way to use VGLX is to let CMake pull it into your project with `FetchContent`. Nothing needs to be installed on your system: the first configure downloads the pinned release and builds it alongside your application.
 
 ```cmake
 include(FetchContent)
-
 FetchContent_Declare(
     vglx
     GIT_REPOSITORY https://github.com/shlomnissan/vglx.git
     GIT_TAG v0.4.0
     GIT_SHALLOW TRUE
 )
-
 FetchContent_MakeAvailable(vglx)
 
 target_link_libraries(MyApp PRIVATE vglx::vglx)
@@ -141,6 +141,7 @@ VGLX includes optional components. You can enable or disable them using CMake fl
 | `VGLX_BUILD_IMGUI`    | Enable ImGui support for debug UI/tools.                                    |
 | `VGLX_BUILD_TESTS`    | Build unit tests.                                                           |
 | `VGLX_INSTALL`        | Generate install rules and the CMake package. |
+| `VGLX_STATIC_MOLTENVK` | Link MoltenVK into the Vulkan backend. |
 
 Examples, tests and ImGui are enabled by default only when VGLX is the top-level project.
 

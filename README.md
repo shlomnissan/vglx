@@ -34,14 +34,12 @@ VGLX needs a C++23 compiler and CMake 3.25 or newer. The quickest way to use it 
 
 ```cmake
 include(FetchContent)
-
 FetchContent_Declare(
     vglx
     GIT_REPOSITORY https://github.com/shlomnissan/vglx.git
     GIT_TAG v0.4.0
     GIT_SHALLOW TRUE
 )
-
 FetchContent_MakeAvailable(vglx)
 
 target_link_libraries(MyApp PRIVATE vglx::vglx)

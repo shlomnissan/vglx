@@ -28,8 +28,8 @@ include(FetchContent)
 FetchContent_Declare(
     vglx
     GIT_REPOSITORY https://github.com/shlomnissan/vglx.git
-    GIT_TAG        v0.4.0
-    GIT_SHALLOW    TRUE
+    GIT_TAG v0.4.0
+    GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(vglx)
 

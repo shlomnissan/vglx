@@ -84,7 +84,7 @@ set(SOURCE_CODE
 set(VULKAN_SOURCES
     "renderer/vulkan/vk_renderer_impl.cpp"
     "renderer/vulkan/vk_renderer_impl.hpp"
-    "${VENDOR_DIR}/volk/volk.c"
+    "renderer/vulkan/vk_volk.cpp"
 )
 
 set(GL_SOURCES
@@ -266,7 +266,38 @@ if (VGLX_EXPERIMENTAL_VULKAN)
         $<BUILD_INTERFACE:${VENDOR_DIR}/volk>
     )
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw ${CMAKE_DL_LIBS})
-    target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_VULKAN VK_NO_PROTOTYPES)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_RENDERER_VULKAN VK_NO_PROTOTYPES VOLK_NAMESPACE)
+
+    if (APPLE AND VGLX_STATIC_MOLTENVK)
+        include(FetchContent)
+        FetchContent_Declare(
+            moltenvk
+            URL https://github.com/KhronosGroup/MoltenVK/releases/download/v1.4.2/MoltenVK-macos.tar
+            URL_HASH SHA256=f95765a6229cb7b915990a2890ce12ebe36a730b021545d3d52ae69ce4c4024e
+        )
+        FetchContent_MakeAvailable(moltenvk)
+
+        set(MOLTENVK_LIBRARY "${moltenvk_SOURCE_DIR}/MoltenVK/static/MoltenVK.xcframework/macos-arm64_x86_64/libMoltenVK.a")
+        if (NOT EXISTS "${MOLTENVK_LIBRARY}")
+            message(FATAL_ERROR "MoltenVK static library not found at ${MOLTENVK_LIBRARY}")
+        endif()
+
+        target_link_libraries(${PROJECT_NAME} PRIVATE
+            "$<BUILD_INTERFACE:${MOLTENVK_LIBRARY}>$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/libMoltenVK.a>"
+            "-framework Metal"
+            "-framework IOSurface"
+            "-framework QuartzCore"
+            "-framework CoreGraphics"
+            "-framework Foundation"
+            "-framework AppKit"
+        )
+
+        target_compile_definitions(${PROJECT_NAME} PRIVATE VGLX_STATIC_MOLTENVK)
+
+        if (VGLX_INSTALL AND NOT BUILD_SHARED_LIBS)
+            install(FILES "${MOLTENVK_LIBRARY}" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+        endif()
+    endif()
 else()
     target_sources(${PROJECT_NAME} PRIVATE ${GL_SOURCES})
     target_link_libraries(${PROJECT_NAME} PRIVATE glad glfw)

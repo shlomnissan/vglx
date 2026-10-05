@@ -18,6 +18,7 @@ option(VGLX_BUILD_IMGUI "Build and integrate ImGui from the vendored source" ${P
 option(VGLX_BUILD_TESTS "Build unit tests and test infrastructure using GTest" ${PROJECT_IS_TOP_LEVEL})
 option(VGLX_BUILD_BENCHMARKS "Build microbenchmarks using Google Benchmark" OFF)
 option(VGLX_EXPERIMENTAL_VULKAN "Build the experimental Vulkan renderer instead of OpenGL" OFF)
+option(VGLX_STATIC_MOLTENVK "Link MoltenVK into the Vulkan backend on Apple platforms" ${APPLE})
 option(VGLX_INSTALL "Generate install rules and the CMake package" ${PROJECT_IS_TOP_LEVEL})
 
 if (VGLX_EXPERIMENTAL_VULKAN AND VGLX_BUILD_IMGUI)

@@ -28,9 +28,19 @@
 #include <glad/glad.h>
 #endif
 
+#ifdef VGLX_STATIC_MOLTENVK
+// The entry point of the MoltenVK linked into this binary. volk's pointer of
+// the same name lives in namespace volk, so the two never collide.
+extern "C" PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* name);
+#endif
+
 namespace vglx {
 
 namespace {
+
+#ifdef VGLX_RENDERER_VULKAN
+auto vulkan_load_entry_points() -> bool;
+#endif
 
 auto glfw_get_error() -> std::string;
 auto glfw_key_callback(GLFWwindow*, int key, int scancode, int action, int mods) -> void;
@@ -58,10 +68,10 @@ Window::Impl::Impl(const Window::Parameters& params) : params_(params) {}
 
 auto Window::Impl::Initialize() -> std::expected<void, std::string> {
 #ifdef VGLX_RENDERER_VULKAN
-    if (volkInitialize() != VK_SUCCESS) {
+    if (!vulkan_load_entry_points()) {
         return std::unexpected("Failed to load the Vulkan loader");
     }
-    glfwInitVulkanLoader(vkGetInstanceProcAddr);
+    glfwInitVulkanLoader(volk::vkGetInstanceProcAddr);
 #endif
 
     if (!glfwInit()) {
@@ -201,6 +211,23 @@ Window::Impl::~Impl() {
 }
 
 namespace {
+
+#ifdef VGLX_RENDERER_VULKAN
+auto vulkan_load_entry_points() -> bool {
+    #if defined(VGLX_STATIC_MOLTENVK) && defined(NDEBUG)
+        volkInitializeCustom(::vkGetInstanceProcAddr);
+        return true;
+    #else
+        if (volkInitialize() == VK_SUCCESS) return true;
+        #ifdef VGLX_STATIC_MOLTENVK
+            volkInitializeCustom(::vkGetInstanceProcAddr);
+            return true;
+        #else
+            return false;
+        #endif
+    #endif
+}
+#endif
 
 auto glfw_get_error() -> std::string {
     auto error = static_cast<const char*>(nullptr);
