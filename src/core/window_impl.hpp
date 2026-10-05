@@ -10,6 +10,7 @@
 #include "vglx/core/window.hpp"
 
 #include <expected>
+#include <span>
 #include <string>
 
 #ifdef VGLX_RENDERER_VULKAN
@@ -61,6 +62,16 @@ public:
     auto SetTitle(std::string_view title) -> void;
 
     auto SetResizeCallback(ResizeCallback callback) -> void;
+
+    [[nodiscard]] auto GetVSync() const -> bool {
+        return params_.vsync;
+    }
+
+#ifdef VGLX_RENDERER_VULKAN
+    [[nodiscard]] auto GetRequiredVulkanExtensions() const -> std::expected<std::span<const char* const>, std::string>;
+
+    [[nodiscard]] auto CreateVulkanSurface(VkInstance instance) const -> std::expected<VkSurfaceKHR, std::string>;
+#endif
 
     ~Impl();
 

@@ -16,6 +16,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -198,6 +199,25 @@ auto Window::Impl::SetTitle(std::string_view title) -> void {
 auto Window::Impl::SetResizeCallback(ResizeCallback callback) -> void {
     resize_callback_ = std::move(callback);
 }
+
+#ifdef VGLX_RENDERER_VULKAN
+auto Window::Impl::GetRequiredVulkanExtensions() const -> std::expected<std::span<const char* const>, std::string> {
+    auto count = std::uint32_t {0};
+    const auto extensions = glfwGetRequiredInstanceExtensions(&count);
+    if (extensions == nullptr) {
+        return std::unexpected("Failed to query required Vulkan extensions: " + glfw_get_error());
+    }
+    return std::span<const char* const> {extensions, count};
+}
+
+auto Window::Impl::CreateVulkanSurface(VkInstance instance) const -> std::expected<VkSurfaceKHR, std::string> {
+    auto surface = VkSurfaceKHR {VK_NULL_HANDLE};
+    if (glfwCreateWindowSurface(instance, window_, nullptr, &surface) != VK_SUCCESS) {
+        return std::unexpected("Failed to create a Vulkan surface: " + glfw_get_error());
+    }
+    return surface;
+}
+#endif
 
 Window::Impl::~Impl() {
 #ifdef VGLX_USE_IMGUI
