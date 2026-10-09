@@ -5,7 +5,8 @@
       "name": "development",
       "binaryDir": "${sourceDir}/build/development",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "VGLX_STATIC_MOLTENVK": "OFF"
       }
     },
     {
@@ -13,7 +14,8 @@
       "inherits": "development",
       "binaryDir": "${sourceDir}/build/development-release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "VGLX_STATIC_MOLTENVK": "ON"
       }
     },
     {
@@ -21,6 +23,7 @@
       "binaryDir": "${sourceDir}/out/install",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
+        "VGLX_STATIC_MOLTENVK": "ON",
         "VGLX_BUILD_EXAMPLES": "OFF",
         "VGLX_BUILD_TESTS": "OFF"
       }
@@ -30,6 +33,7 @@
       "binaryDir": "${sourceDir}/build/benchmark",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
+        "VGLX_STATIC_MOLTENVK": "ON",
         "VGLX_BUILD_EXAMPLES": "OFF",
         "VGLX_BUILD_TESTS": "OFF",
         "VGLX_BUILD_BENCHMARKS": "ON"

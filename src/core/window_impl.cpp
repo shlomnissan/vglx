@@ -30,7 +30,7 @@
 #endif
 
 #ifdef VGLX_STATIC_MOLTENVK
-// The entry point of the MoltenVK linked into this binary. volk's pointer of
+// The entry point of the MoltenVK linked into this binary. Volk's pointer of
 // the same name lives in namespace volk, so the two never collide.
 extern "C" PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* name);
 #endif
@@ -234,17 +234,11 @@ namespace {
 
 #ifdef VGLX_RENDERER_VULKAN
 auto vulkan_load_entry_points() -> bool {
-    #if defined(VGLX_STATIC_MOLTENVK) && defined(NDEBUG)
+    #ifdef VGLX_STATIC_MOLTENVK
         volkInitializeCustom(::vkGetInstanceProcAddr);
         return true;
     #else
-        if (volkInitialize() == VK_SUCCESS) return true;
-        #ifdef VGLX_STATIC_MOLTENVK
-            volkInitializeCustom(::vkGetInstanceProcAddr);
-            return true;
-        #else
-            return false;
-        #endif
+        return volkInitialize() == VK_SUCCESS;
     #endif
 }
 #endif
