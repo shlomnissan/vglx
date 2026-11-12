@@ -95,10 +95,18 @@ auto GLState::SetBlending(Material::Blending blending) -> void {
         } else {
             Enable(GL_BLEND);
             switch (blending) {
-                case Normal: glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); break;
-                case Additive: glBlendFunc(GL_SRC_ALPHA, GL_ONE); break;
-                case Subtractive: glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR); break;
-                case Multiply: glBlendFunc(GL_ZERO, GL_SRC_COLOR); break;
+                case Normal:
+                    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+                    break;
+                case Additive:
+                    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
+                    break;
+                case Subtractive:
+                    glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+                    break;
+                case Multiply:
+                    glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+                    break;
                 case None: break;
                 default: VGLX_UNREACHABLE();
             }
