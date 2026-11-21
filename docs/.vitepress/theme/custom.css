@@ -71,22 +71,8 @@
   border-color: rgba(255, 255, 255, 0.18);
   background-color: rgba(255, 255, 255, 0.06);
 }
-.VPNavBar.home {
-  .title {
-    display: none;
-  }
-
-  .search {
-    padding-left: 0px;
-  }
-}
 
 @media (max-width: 768px) {
-  .VPNavBar.home .content-body {
-    flex: 1;
-    justify-content: space-between;
-  }
-
   .search button {
     padding-left: 0px;
   }
@@ -100,27 +86,6 @@
   margin-left: 20px;
 }
 
-.VPHomeHero .name.clip {
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.VPHomeHero .name::before {
-  content: "";
-  display: inline-block;
-  width: 4em;
-  height: 1.5em;
-  -webkit-mask: url("/logo.svg") no-repeat center / contain;
-  background-color: var(--vp-c-text-1);
-  mask: url("/logo.svg") no-repeat center / contain;
-  vertical-align: middle;
-  margin-bottom: 0.15em;
-  margin-right: 0.6rem;
-  margin-left: -0.7rem;
-}
-
 .VPNavBarTitle {
   .title {
     color: transparent;
@@ -128,33 +93,73 @@
   }
 }
 
-.heading {
-  .name {
-    color: var(--vp-c-text-1);
-    font-weight: 800;
-    font-size: 3.3rem;
-
-    @media (max-width: 960px) {
-      font-size: 3rem;
-    }
-
-    @media (max-width: 640px) {
-      font-size: 2.4rem;
-    }
-  }
+/* Home hero: centered over the animated background from HeroHorizon.vue */
+.VPNavBar.home .search {
+  display: none;
 }
 
-.main {
-  .tagline {
-    padding-top: 24px;
+.VPHome {
+  position: relative;
+}
 
-    @media (max-width: 640px) {
-      font-size: 1rem;
+.VPHome .VPHero.VPHomeHero {
+  padding-top: calc(var(--vp-nav-height) + 64px);
+  padding-bottom: 96px;
+
+  @media (min-width: 640px) {
+    padding-bottom: 120px;
+  }
+  text-align: center;
+
+  @media (min-width: 960px) {
+    padding-top: calc(var(--vp-nav-height) + 92px);
+    padding-bottom: 156px;
+  }
+
+  .main {
+    width: 100%;
+  }
+
+  .text {
+    margin: 0 auto;
+    max-width: none;
+    font-size: 36px;
+    line-height: 1.1;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    text-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.5),
+      0 10px 40px rgba(0, 0, 0, 0.6);
+
+    @media (min-width: 640px) {
+      font-size: 48px;
+    }
+
+    @media (min-width: 960px) {
+      font-size: 56px;
+      line-height: 1.1;
+    }
+  }
+
+  .tagline {
+    margin: 0 auto;
+    padding-top: 22px;
+    max-width: 560px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.86);
+    text-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.6),
+      0 4px 20px rgba(0, 0, 0, 0.65);
+
+    @media (min-width: 640px) {
+      font-size: 18px;
     }
   }
 
   .actions {
-    padding-top: 32px;
+    justify-content: center;
+    padding-top: 36px;
   }
 }
 
