@@ -82,3 +82,14 @@ Vulkan SDK.
 
 Only the C headers under `include/` are vendored. The C++ bindings and the
 registry are omitted. Used only by the experimental Vulkan backend.
+
+
+## vulkan-utility-libraries
+
+- Upstream: https://github.com/KhronosGroup/Vulkan-Utility-Libraries
+- Version: v1.4.350
+- License: Apache-2.0
+
+Only `include/vulkan/vk_enum_string_helper.h` is vendored, along with the
+upstream `LICENSE.md`. Converts Vulkan enum values to strings. Used only by
+the experimental Vulkan backend and pinned to match the vendored Vulkan headers.

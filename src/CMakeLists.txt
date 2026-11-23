@@ -265,6 +265,7 @@ if (VGLX_EXPERIMENTAL_VULKAN)
     target_sources(${PROJECT_NAME} PRIVATE ${VULKAN_SOURCES})
     target_include_directories(${PROJECT_NAME} PRIVATE
         $<BUILD_INTERFACE:${VENDOR_DIR}/vulkan-headers/include>
+        $<BUILD_INTERFACE:${VENDOR_DIR}/vulkan-utility-libraries/include>
         $<BUILD_INTERFACE:${VENDOR_DIR}/volk>
     )
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE $<BUILD_INTERFACE:${VENDOR_DIR}/vma>)
