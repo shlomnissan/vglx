@@ -23,7 +23,7 @@ struct VulkanInstance {
 
 struct VulkanQueue {
     VkQueue handle {VK_NULL_HANDLE};
-    std::uint32_t family_index {0};
+    uint32_t family_index {0};
 };
 
 struct VulkanDevice {
