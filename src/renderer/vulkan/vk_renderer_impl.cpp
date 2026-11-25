@@ -66,9 +66,9 @@ auto Renderer::Impl::SetExposure(float exposure) -> void {}
 auto Renderer::Impl::SetShadowMap(ShadowMap shadow_map) -> void {}
 
 Renderer::Impl::~Impl() {
-    if (device_.handle != VK_NULL_HANDLE) vk_destroy_device(device_);
-    if (surface_ != VK_NULL_HANDLE) vk_destroy_surface(instance_.handle, surface_);
-    if (instance_.handle != VK_NULL_HANDLE) vk_destroy_instance(instance_);
+    vk_destroy_device(device_);
+    vk_destroy_surface(instance_.handle, surface_);
+    vk_destroy_instance(instance_);
 }
 
 }

@@ -38,7 +38,7 @@ struct VulkanDevice {
     VkPhysicalDeviceMemoryProperties memory_properties {};
 };
 
-[[nodiscard]] auto vk_create_instance(std::span<const char* const> required_extensions) -> std::expected<VulkanInstance, std::string>;
+[[nodiscard]] auto vk_create_instance(std::span<const char* const> extensions) -> std::expected<VulkanInstance, std::string>;
 
 [[nodiscard]] auto vk_create_device(VkInstance instance, VkSurfaceKHR surface) -> std::expected<VulkanDevice, std::string>;
 
