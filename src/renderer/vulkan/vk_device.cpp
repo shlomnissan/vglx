@@ -35,7 +35,8 @@ struct VulkanPhysicalDevice {
     uint32_t vulkan_version {0};
     bool is_swapchain_extension {false};
     bool is_dedicated_gpu {false};
-    bool is_shared_graphics_present {false};
+    bool is_dedicated_compute_queue {false};
+    bool is_shared_graphics_present_queue {false};
 };
 
 auto get_device_extensions(VkPhysicalDevice device) -> std::expected<std::vector<VkExtensionProperties>, std::string> {
@@ -142,31 +143,37 @@ auto get_physical_devices(VkInstance instance, VkSurfaceKHR surface) -> std::exp
         auto queue_families = std::vector<VkQueueFamilyProperties>(count);
         vkGetPhysicalDeviceQueueFamilyProperties(d, &count, queue_families.data());
 
-        auto queue_idx = uint32_t {0};
-        for (const auto& q : queue_families) {
-            if (q.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                device.graphics_queue_family = queue_idx;
-            }
+        for (auto i = uint32_t {0}; i < queue_families.size(); ++i) {
+            const auto flags = queue_families[i].queueFlags;
+            const bool supports_graphics = (flags & VK_QUEUE_GRAPHICS_BIT) != 0;
+            const bool supports_compute = (flags & VK_QUEUE_COMPUTE_BIT) != 0;
 
-            if (q.queueFlags & VK_QUEUE_COMPUTE_BIT) {
-                device.compute_queue_family = queue_idx;
-            }
-
-            auto surface_support = VkBool32 {false};
-            result = vkGetPhysicalDeviceSurfaceSupportKHR(d, queue_idx, surface, &surface_support);
+            auto supports_present = VkBool32 {false};
+            result = vkGetPhysicalDeviceSurfaceSupportKHR(d, i, surface, &supports_present);
             if (result != VK_SUCCESS) {
                 return std::unexpected(std::format("Failed to query surface support: {}", string_VkResult(result)));
             }
 
-            if (surface_support) {
-                device.present_queue_family = queue_idx;
+            if (supports_graphics && supports_present) {
+                device.graphics_queue_family = i;
+                device.present_queue_family = i;
+                device.is_shared_graphics_present_queue = true;
+            } else {
+                if (supports_graphics && !device.graphics_queue_family.has_value()) {
+                    device.graphics_queue_family = i;
+                }
+                if (supports_present && !device.present_queue_family.has_value()) {
+                    device.present_queue_family = i;
+                }
             }
 
-            queue_idx++;
+            if (supports_compute && !supports_graphics) {
+                device.compute_queue_family = i;
+                device.is_dedicated_compute_queue = true;
+            } else if (supports_compute && !device.compute_queue_family.has_value()) {
+                device.compute_queue_family = i;
+            }
         }
-
-        device.is_shared_graphics_present = device.graphics_queue_family.has_value() &&
-                                            device.graphics_queue_family == device.present_queue_family;
 
         if (device.present_queue_family.has_value()) {
             auto surface_properties = get_surface_properties(d, surface);
