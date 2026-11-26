@@ -189,12 +189,56 @@ auto get_physical_devices(VkInstance instance, VkSurfaceKHR surface) -> std::exp
     return physical_devices;
 }
 
+auto select_physical_device(const std::vector<VulkanPhysicalDevice>& physical_devices) -> std::optional<VulkanPhysicalDevice> {
+    auto curr_rating = 0;
+    auto curr_match = std::optional<VulkanPhysicalDevice> {std::nullopt};
+
+    for (const auto& device : physical_devices) {
+        if (device.vulkan_version < VK_API_VERSION_1_3) continue;
+        if (!device.is_swapchain_extension) continue;
+        if (device.surface_info.formats.empty()) continue;
+        if (device.surface_info.present_modes.empty()) continue;
+        if (!device.graphics_queue_family.has_value()) continue;
+        if (!device.present_queue_family.has_value()) continue;
+        if (!device.compute_queue_family.has_value()) continue;
+
+        auto features_13 = VkPhysicalDeviceVulkan13Features {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
+        auto features = VkPhysicalDeviceFeatures2 {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+            .pNext = &features_13
+        };
+
+        vkGetPhysicalDeviceFeatures2(device.handle, &features);
+
+        if (!features_13.synchronization2) continue;
+        if (!features_13.dynamicRendering) continue;
+
+        auto rating = 1;
+        if (device.is_dedicated_gpu) rating += 100;
+        if (features.features.samplerAnisotropy) rating += 10;
+        if (device.is_shared_graphics_present_queue) rating += 5;
+        if (device.is_dedicated_compute_queue) rating += 1;
+
+        if (rating >= curr_rating) {
+            curr_rating = rating;
+            curr_match = device;
+        }
+    }
+
+    return curr_match;
+}
+
 }
 
 auto vk_create_device(VkInstance instance, VkSurfaceKHR surface) -> std::expected<VulkanDevice, std::string> {
-    auto devices = get_physical_devices(instance, surface);
-    if (!devices.has_value()) {
-        return std::unexpected(devices.error());
+    auto physical_devices = get_physical_devices(instance, surface);
+    if (!physical_devices.has_value()) {
+        return std::unexpected(physical_devices.error());
+    }
+
+    auto physical_device = select_physical_device(physical_devices.value());
+    if (!physical_device) {
+        return std::unexpected("Failed to find a suitable Vulkan-compatible device");
     }
 
     return std::unexpected("Vulkan device creation is not implemented");
