@@ -186,12 +186,6 @@ auto vk_create_instance(std::span<const char* const> extensions) -> std::expecte
     return instance;
 }
 
-auto vk_create_device(VkInstance instance, VkSurfaceKHR surface) -> std::expected<VulkanDevice, std::string> {
-    return std::unexpected("Vulkan device creation is not implemented");
-}
-
-auto vk_destroy_device(VulkanDevice& device) -> void {}
-
 auto vk_destroy_surface(VkInstance instance, VkSurfaceKHR surface) -> void {
     if (instance != VK_NULL_HANDLE && surface != VK_NULL_HANDLE) {
         vkDestroySurfaceKHR(instance, surface, nullptr);

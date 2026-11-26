@@ -82,6 +82,7 @@ set(SOURCE_CODE
 )
 
 set(VULKAN_SOURCES
+    "renderer/vulkan/vk_device.cpp"
     "renderer/vulkan/vk_driver.cpp"
     "renderer/vulkan/vk_driver.hpp"
     "renderer/vulkan/vk_renderer_impl.cpp"
