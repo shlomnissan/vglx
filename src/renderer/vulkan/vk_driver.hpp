@@ -18,6 +18,8 @@
 
 namespace vglx {
 
+constexpr auto kVulkanTargetVersion = VK_API_VERSION_1_3;
+
 struct VulkanInstance {
     VkInstance handle {VK_NULL_HANDLE};
     VkDebugUtilsMessengerEXT debug_messenger {VK_NULL_HANDLE};
