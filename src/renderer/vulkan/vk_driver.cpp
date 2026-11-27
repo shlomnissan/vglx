@@ -27,8 +27,6 @@ constexpr auto kDebugEnabled = false;
 constexpr auto kDebugEnabled = true;
 #endif
 
-constexpr auto kMinVulkanVersionRequired = VK_API_VERSION_1_3;
-
 auto get_instance_extensions() -> std::expected<std::vector<VkExtensionProperties>, std::string> {
     auto count = uint32_t {0};
     auto result = vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
@@ -96,13 +94,13 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
 
 auto vk_create_instance(std::span<const char* const> extensions) -> std::expected<VulkanInstance, std::string> {
     auto version = volkGetInstanceVersion();
-    if (version < kMinVulkanVersionRequired) {
+    if (version < kVulkanTargetVersion) {
         return std::unexpected(
             std::format(
                 "Vulkan minimum required version {}.{}.{} not supported",
-                VK_API_VERSION_MAJOR(kMinVulkanVersionRequired),
-                VK_API_VERSION_MINOR(kMinVulkanVersionRequired),
-                VK_API_VERSION_PATCH(kMinVulkanVersionRequired)
+                VK_API_VERSION_MAJOR(kVulkanTargetVersion),
+                VK_API_VERSION_MINOR(kVulkanTargetVersion),
+                VK_API_VERSION_PATCH(kVulkanTargetVersion)
             )
         );
     }
@@ -133,7 +131,7 @@ auto vk_create_instance(std::span<const char* const> extensions) -> std::expecte
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = nullptr,
         .pEngineName = "VGLX",
-        .apiVersion = kMinVulkanVersionRequired
+        .apiVersion = kVulkanTargetVersion
     };
 
     auto debug_info = VkDebugUtilsMessengerCreateInfoEXT {
@@ -200,6 +198,8 @@ auto vk_destroy_instance(VulkanInstance& instance) -> void {
     if (instance.handle != VK_NULL_HANDLE) {
         vkDestroyInstance(instance.handle, nullptr);
     }
+
+    instance = {};
 }
 
 }

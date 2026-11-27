@@ -14,6 +14,8 @@
 #include <span>
 #include <string>
 
+#include "vk_mem_alloc.h"
+
 namespace vglx {
 
 struct VulkanInstance {
@@ -26,16 +28,23 @@ struct VulkanQueue {
     uint32_t family_index {0};
 };
 
+struct VulkanDeviceFeatures {
+    bool synchronization2 {false};
+    bool dynamic_rendering {false};
+    bool sampler_anisotropy {false};
+};
+
 struct VulkanDevice {
     VkPhysicalDevice adapter {VK_NULL_HANDLE};
     VkDevice handle {VK_NULL_HANDLE};
+    VmaAllocator allocator {nullptr};
 
-    VulkanQueue graphics;
-    VulkanQueue compute;
-    VulkanQueue present;
+    VulkanQueue graphics {};
+    VulkanQueue compute {};
+    VulkanQueue present {};
 
     VkPhysicalDeviceProperties properties {};
-    VkPhysicalDeviceMemoryProperties memory_properties {};
+    VulkanDeviceFeatures features {};
 };
 
 [[nodiscard]] auto vk_create_instance(std::span<const char* const> extensions) -> std::expected<VulkanInstance, std::string>;

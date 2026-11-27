@@ -11,6 +11,7 @@
 #include <format>
 #include <optional>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 
 #include <vulkan/vk_enum_string_helper.h>
@@ -27,14 +28,13 @@ struct VulkanSurfaceProperties {
 
 struct VulkanPhysicalDevice {
     VkPhysicalDevice handle {VK_NULL_HANDLE};
-    std::string name {};
+    VkPhysicalDeviceProperties properties {};
     VulkanSurfaceProperties surface_info {};
+    VulkanDeviceFeatures features {};
     std::optional<uint32_t> graphics_queue_family {std::nullopt};
     std::optional<uint32_t> present_queue_family {std::nullopt};
     std::optional<uint32_t> compute_queue_family {std::nullopt};
-    uint32_t vulkan_version {0};
     bool is_swapchain_extension {false};
-    bool is_dedicated_gpu {false};
     bool is_dedicated_compute_queue {false};
     bool is_shared_graphics_present_queue {false};
 };
@@ -133,10 +133,8 @@ auto get_physical_devices(VkInstance instance, VkSurfaceKHR surface) -> std::exp
 
         auto device = VulkanPhysicalDevice {
             .handle = d,
-            .name = properties.deviceName,
-            .vulkan_version = properties.apiVersion,
+            .properties = properties,
             .is_swapchain_extension = ext_swapchain.value(),
-            .is_dedicated_gpu = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
         };
 
         vkGetPhysicalDeviceQueueFamilyProperties(d, &count, nullptr);
@@ -189,12 +187,12 @@ auto get_physical_devices(VkInstance instance, VkSurfaceKHR surface) -> std::exp
     return physical_devices;
 }
 
-auto select_physical_device(const std::vector<VulkanPhysicalDevice>& physical_devices) -> std::optional<VulkanPhysicalDevice> {
+auto select_physical_device(std::vector<VulkanPhysicalDevice>& physical_devices) -> std::optional<VulkanPhysicalDevice> {
     auto curr_rating = 0;
     auto curr_match = std::optional<VulkanPhysicalDevice> {std::nullopt};
 
-    for (const auto& device : physical_devices) {
-        if (device.vulkan_version < VK_API_VERSION_1_3) continue;
+    for (auto& device : physical_devices) {
+        if (device.properties.apiVersion < kVulkanTargetVersion) continue;
         if (!device.is_swapchain_extension) continue;
         if (device.surface_info.formats.empty()) continue;
         if (device.surface_info.present_modes.empty()) continue;
@@ -213,9 +211,13 @@ auto select_physical_device(const std::vector<VulkanPhysicalDevice>& physical_de
         if (!features_13.synchronization2) continue;
         if (!features_13.dynamicRendering) continue;
 
+        device.features.synchronization2 = true;
+        device.features.dynamic_rendering = true;
+        device.features.sampler_anisotropy = features.features.samplerAnisotropy;
+
         auto rating = 1;
-        if (device.is_dedicated_gpu) rating += 100;
-        if (features.features.samplerAnisotropy) rating += 10;
+        if (device.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) rating += 100;
+        if (device.features.sampler_anisotropy) rating += 10;
         if (device.is_shared_graphics_present_queue) rating += 5;
         if (device.is_dedicated_compute_queue) rating += 1;
 
@@ -236,16 +238,120 @@ auto vk_create_device(VkInstance instance, VkSurfaceKHR surface) -> std::expecte
         return std::unexpected(physical_devices.error());
     }
 
-    auto physical_device = select_physical_device(physical_devices.value());
-    if (!physical_device) {
+    auto selection = select_physical_device(physical_devices.value());
+    if (!selection) {
         return std::unexpected("Failed to find a suitable Vulkan-compatible device");
     }
 
-    return std::unexpected("Vulkan device creation is not implemented");
+    auto& physical_device = selection.value();
+
+    auto unique_queues = std::unordered_set<uint32_t> {{
+        physical_device.graphics_queue_family.value(),
+        physical_device.present_queue_family.value(),
+        physical_device.compute_queue_family.value()
+    }};
+
+    auto queue_priority = 1.0f;
+    auto queues = std::vector<VkDeviceQueueCreateInfo>();
+    for (auto unique_queue : unique_queues) {
+        queues.push_back({
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .queueFamilyIndex = unique_queue,
+            .queueCount = 1,
+            .pQueuePriorities = &queue_priority
+        });
+    }
+
+    auto features_13 = VkPhysicalDeviceVulkan13Features {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+        .synchronization2 = physical_device.features.synchronization2,
+        .dynamicRendering = physical_device.features.dynamic_rendering
+    };
+
+    auto features = VkPhysicalDeviceFeatures2 {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+        .pNext = &features_13,
+        .features = {
+            .samplerAnisotropy = physical_device.features.sampler_anisotropy
+        }
+    };
+
+    auto extensions = std::vector<const char*> {"VK_KHR_swapchain"};
+
+    auto ext_portability = has_device_extension(physical_device.handle, "VK_KHR_portability_subset");
+    if (!ext_portability.has_value()) {
+        return std::unexpected(ext_portability.error());
+    } else if (ext_portability.value()) {
+        extensions.emplace_back("VK_KHR_portability_subset");
+    }
+
+    auto create_info = VkDeviceCreateInfo {
+        .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .pNext = &features,
+        .queueCreateInfoCount = static_cast<uint32_t>(queues.size()),
+        .pQueueCreateInfos = queues.data(),
+        .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+        .ppEnabledExtensionNames = extensions.data(),
+        .pEnabledFeatures = nullptr
+    };
+
+    auto device = VulkanDevice {
+        .adapter = physical_device.handle,
+        .graphics = VulkanQueue {.family_index = physical_device.graphics_queue_family.value()},
+        .compute = VulkanQueue {.family_index = physical_device.compute_queue_family.value()},
+        .present = VulkanQueue {.family_index = physical_device.present_queue_family.value()},
+        .properties = physical_device.properties,
+        .features = physical_device.features
+    };
+
+    auto result = vkCreateDevice(physical_device.handle, &create_info, nullptr, &device.handle);
+    if (result != VK_SUCCESS) {
+        return std::unexpected(std::format("Failed to create Vulkan device: {}", string_VkResult(result)));
+    }
+
+    volk::volkLoadDevice(device.handle);
+
+    auto allocator = VmaAllocatorCreateInfo {
+        .physicalDevice = device.adapter,
+        .device = device.handle,
+        .instance = instance,
+        .vulkanApiVersion = kVulkanTargetVersion
+    };
+
+    auto functions = VmaVulkanFunctions {};
+    result = vmaImportVulkanFunctionsFromVolk(&allocator, &functions);
+    if (result != VK_SUCCESS) {
+        vkDestroyDevice(device.handle, nullptr);
+        return std::unexpected(std::format(
+            "Failed to import Vulkan functions: {}", string_VkResult(result)
+        ));
+    }
+
+    allocator.pVulkanFunctions = &functions;
+
+    result = vmaCreateAllocator(&allocator, &device.allocator);
+    if (result != VK_SUCCESS) {
+        vkDestroyDevice(device.handle, nullptr);
+        return std::unexpected(std::format("Failed to create Vulkan memory allocator: {}", string_VkResult(result)));
+    }
+
+    vkGetDeviceQueue(device.handle, device.graphics.family_index, 0, &device.graphics.handle);
+    vkGetDeviceQueue(device.handle, device.compute.family_index, 0, &device.compute.handle);
+    vkGetDeviceQueue(device.handle, device.present.family_index, 0, &device.present.handle);
+
+    return device;
 }
 
 auto vk_destroy_device(VulkanDevice& device) -> void {
+    if (device.allocator != nullptr) {
+        vmaDestroyAllocator(device.allocator);
+    }
 
+    if (device.handle != VK_NULL_HANDLE) {
+        vkDestroyDevice(device.handle, nullptr);
+    }
+
+    device = {};
 }
 
 }
