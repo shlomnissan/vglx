@@ -13,6 +13,7 @@
 #include <expected>
 #include <span>
 #include <string>
+#include <vector>
 
 #include "vk_mem_alloc.h"
 
@@ -47,6 +48,19 @@ struct VulkanDevice {
 
     VkPhysicalDeviceProperties properties {};
     VulkanDeviceFeatures features {};
+};
+
+struct VulkanSwapchainImage {
+    VkImage handle {VK_NULL_HANDLE};
+    VkImageView view {VK_NULL_HANDLE};
+    VkSemaphore render_finished {VK_NULL_HANDLE};
+};
+
+struct VulkanSwapchain {
+    VkSwapchainKHR handle {VK_NULL_HANDLE};
+    std::vector<VulkanSwapchainImage> images {};
+    VkFormat format {VK_FORMAT_UNDEFINED};
+    VkExtent2D extent {};
 };
 
 [[nodiscard]] auto vk_create_instance(std::span<const char* const> extensions) -> std::expected<VulkanInstance, std::string>;

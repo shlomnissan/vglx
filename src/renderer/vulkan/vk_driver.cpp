@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <format>
 #include <string_view>
-#include <vector>
 #include <ranges>
 
 #include <vulkan/vk_enum_string_helper.h>
